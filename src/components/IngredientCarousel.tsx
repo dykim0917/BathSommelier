@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Ingredient } from '@/src/engine/types';
 import {
-  SURFACE,
-  GLASS_BORDER,
-  GLASS_SHADOW,
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
 } from '@/src/data/colors';
@@ -23,8 +23,8 @@ interface IngredientCarouselProps {
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH - 60; // 30px margin each side
-const CARD_SPACING = 12;
+const CARD_WIDTH = Math.max(160, SCREEN_WIDTH * 0.54);
+const CARD_SPACING = 10;
 
 export function IngredientCarousel({
   ingredients,
@@ -44,46 +44,47 @@ export function IngredientCarousel({
     itemVisiblePercentThreshold: 50,
   }).current;
 
+  const handleOpenPurchase = async (url?: string) => {
+    if (!url) return;
+    try {
+      await Linking.openURL(url);
+    } catch {
+      // no-op for invalid/blocked external links in test environments
+    }
+  };
+
   const renderItem = ({ item }: { item: Ingredient }) => (
-    <View style={[styles.card, { width: CARD_WIDTH }]}>
-      {/* Icon area */}
-      <View style={[styles.iconArea, { backgroundColor: accentColor + '15' }]}>
+    <View style={[styles.card, { width: CARD_WIDTH }]}> 
+      <View style={[styles.iconArea, { backgroundColor: accentColor + '15' }]}> 
         <Text style={styles.iconEmoji}>🧴</Text>
       </View>
 
-      {/* Content */}
       <View style={styles.cardContent}>
         <Text style={styles.nameKo}>{item.nameKo}</Text>
         <Text style={styles.nameEn}>{item.nameEn}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
       </View>
 
-      {/* Purchase button */}
-      {item.purchaseUrl && (
-        <TouchableOpacity
-          style={[styles.purchaseButton, { backgroundColor: accentColor }]}
-          onPress={() => Linking.openURL(item.purchaseUrl!)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.purchaseText}>구매하기</Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={[styles.purchaseButton, { backgroundColor: accentColor }]}
+        onPress={() => handleOpenPurchase(item.purchaseUrl)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.purchaseText}>구매하기</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>준비물</Text>
-      <Text style={styles.subtitle}>
-        {ingredients.length}가지 재료를 준비해주세요
-      </Text>
+      <Text style={styles.subtitle}>{ingredients.length}가지 재료를 준비해주세요</Text>
 
       <FlatList
         data={ingredients}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         horizontal
-        pagingEnabled={false}
         snapToInterval={CARD_WIDTH + CARD_SPACING}
         snapToAlignment="start"
         decelerationRate="fast"
@@ -94,7 +95,6 @@ export function IngredientCarousel({
         ItemSeparatorComponent={() => <View style={{ width: CARD_SPACING }} />}
       />
 
-      {/* Dot indicator */}
       {ingredients.length > 1 && (
         <View style={styles.dots}>
           {ingredients.map((_, i) => (
@@ -121,71 +121,72 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 4,
-    paddingHorizontal: 30,
+    marginTop: 10,
+    marginBottom: 6,
+    paddingHorizontal: 20,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: TEXT_SECONDARY,
-    marginBottom: 16,
-    paddingHorizontal: 30,
+    marginBottom: 14,
+    paddingHorizontal: 20,
   },
   listContent: {
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
   },
   card: {
-    backgroundColor: SURFACE,
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 18,
+    padding: 13,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 3,
   },
   iconArea: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
+    width: 56,
+    height: 52,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   iconEmoji: {
-    fontSize: 32,
+    fontSize: 26,
   },
   cardContent: {
     flex: 1,
   },
   nameKo: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   nameEn: {
-    fontSize: 12,
+    fontSize: 10,
     color: TEXT_SECONDARY,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   description: {
-    fontSize: 14,
+    fontSize: 12,
     color: TEXT_SECONDARY,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   purchaseButton: {
-    marginTop: 16,
+    marginTop: 10,
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: 'center',
   },
   purchaseText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#fff',
   },
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 10,
     gap: 6,
   },
   dot: {

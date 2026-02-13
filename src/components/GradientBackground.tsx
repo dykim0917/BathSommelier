@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BG } from '@/src/data/colors';
+import { APP_BG_BOTTOM, APP_BG_TOP } from '@/src/data/colors';
 
 interface GradientBackgroundProps {
   colorHex: string;
@@ -16,8 +16,8 @@ export function GradientBackground({
 }: GradientBackgroundProps) {
   return (
     <LinearGradient
-      colors={[BG, colorHex + '18', colorHex + '30', BG]}
-      locations={[0, 0.3, 0.7, 1]}
+      colors={[APP_BG_TOP, colorHex + '12', colorHex + '26', APP_BG_BOTTOM]}
+      locations={[0, 0.22, 0.72, 1]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.gradient, style]}

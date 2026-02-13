@@ -9,22 +9,28 @@ export interface ContextOverrides {
   removedIngredientIds: string[];
 }
 
+export interface EnvironmentBase {
+  bathType: BathRecommendation['bathType'];
+  temperature: TemperatureRange;
+  durationMinutes: number | null;
+}
+
 /**
- * Adapts recommendation based on the user's bath environment.
- * - Bathtub: use persona's recommended bath type as-is
- * - Foot bath: force foot type, keep temp, recommend aroma oils
- * - Shower: force shower type, cap duration at 10min, recommend shower steamer
+ * Adapts recommendation based on the selected bath environment.
+ * - bathtub: keep base values
+ * - footbath: force foot bath
+ * - shower: force shower, cap duration to 10 min, replace incompatible ingredients
  */
-export function applyContextBranch(
-  resolved: ResolvedParameters,
+export function applyEnvironmentOverrides(
+  base: EnvironmentBase,
   environment: BathEnvironment
 ): ContextOverrides {
   switch (environment) {
     case 'footbath':
       return {
         bathType: 'foot',
-        temperature: { ...resolved.temperature },
-        durationMinutes: resolved.durationMinutes,
+        temperature: { ...base.temperature },
+        durationMinutes: base.durationMinutes,
         additionalIngredientIds: [],
         removedIngredientIds: [],
       };
@@ -32,11 +38,9 @@ export function applyContextBranch(
     case 'shower':
       return {
         bathType: 'shower',
-        temperature: { ...resolved.temperature },
+        temperature: { ...base.temperature },
         durationMinutes:
-          resolved.durationMinutes !== null
-            ? Math.min(resolved.durationMinutes, 10)
-            : 10,
+          base.durationMinutes !== null ? Math.min(base.durationMinutes, 10) : 10,
         additionalIngredientIds: ['shower_steamer', 'body_wash_relaxing'],
         removedIngredientIds: ['carbonated_bath', 'epsom_salt'],
       };
@@ -44,11 +48,25 @@ export function applyContextBranch(
     case 'bathtub':
     default:
       return {
-        bathType: resolved.primaryPersona.bathType,
-        temperature: { ...resolved.temperature },
-        durationMinutes: resolved.durationMinutes,
+        bathType: base.bathType,
+        temperature: { ...base.temperature },
+        durationMinutes: base.durationMinutes,
         additionalIngredientIds: [],
         removedIngredientIds: [],
       };
   }
+}
+
+export function applyContextBranch(
+  resolved: ResolvedParameters,
+  environment: BathEnvironment
+): ContextOverrides {
+  return applyEnvironmentOverrides(
+    {
+      bathType: resolved.primaryPersona.bathType,
+      temperature: resolved.temperature,
+      durationMinutes: resolved.durationMinutes,
+    },
+    environment
+  );
 }

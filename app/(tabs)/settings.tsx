@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,19 +7,24 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import { BathEnvironment, HealthCondition } from '@/src/engine/types';
 import { clearProfile } from '@/src/storage/profile';
 import {
-  BG,
-  SURFACE,
-  GLASS_BORDER,
-  GLASS_SHADOW,
+  ACCENT,
+  APP_BG_BOTTOM,
+  APP_BG_TOP,
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
+  TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
-  ACCENT_LIGHT,
+  TYPE_BODY,
+  TYPE_TITLE,
 } from '@/src/data/colors';
 
 const ENV_LABELS: Record<BathEnvironment, string> = {
@@ -68,97 +73,113 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>내 프로필</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>목욕 환경</Text>
-          <Text style={styles.infoValue}>
-            {ENV_LABELS[profile.bathEnvironment]}
-          </Text>
-        </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>내 프로필</Text>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>건강 상태</Text>
-          <View style={styles.conditionsList}>
-            {profile.healthConditions.map((c) => (
-              <Text key={c} style={styles.conditionTag}>
-                {CONDITION_LABELS[c]}
-              </Text>
-            ))}
+          <View style={styles.infoCard}>
+            <Text style={styles.infoLabel}>목욕 환경</Text>
+            <Text style={styles.infoValue}>{ENV_LABELS[profile.bathEnvironment]}</Text>
+          </View>
+
+          <View style={styles.infoCardColumn}>
+            <Text style={styles.infoLabel}>건강 상태</Text>
+            <View style={styles.conditionsList}>
+              {profile.healthConditions.map((c) => (
+                <Text key={c} style={styles.conditionTag}>{CONDITION_LABELS[c]}</Text>
+              ))}
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>설정</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>설정</Text>
 
-        <TouchableOpacity style={styles.actionCard} onPress={handleResetOnboarding} activeOpacity={0.7}>
-          <Text style={styles.actionText}>프로필 다시 설정하기</Text>
-          <Text style={styles.actionArrow}>→</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>앱 정보</Text>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>버전</Text>
-          <Text style={styles.infoValue}>1.0.0</Text>
+          <TouchableOpacity style={styles.actionCard} onPress={handleResetOnboarding} activeOpacity={0.78}>
+            <Text style={styles.actionText}>프로필 다시 설정하기</Text>
+            <Text style={styles.actionArrow}>→</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>이름</Text>
-          <Text style={styles.infoValue}>Bath Sommelier</Text>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>앱 정보</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoLabel}>버전</Text>
+            <Text style={styles.infoValue}>3.2.0</Text>
+          </View>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoLabel}>이름</Text>
+            <Text style={styles.infoValue}>Bath Sommelier</Text>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
   },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 18,
+    paddingBottom: 28,
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: TYPE_TITLE,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   infoCard: {
-    backgroundColor: SURFACE,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 16,
+    padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowRadius: 9,
+    elevation: 2,
+  },
+  infoCardColumn: {
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 16,
+    padding: 15,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 9,
     elevation: 2,
   },
   infoLabel: {
-    fontSize: 14,
+    fontSize: TYPE_BODY,
     color: TEXT_SECONDARY,
+    marginBottom: 8,
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: TYPE_BODY,
     fontWeight: '600',
     color: TEXT_PRIMARY,
   },
@@ -166,40 +187,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    justifyContent: 'flex-end',
-    flex: 1,
-    marginLeft: 12,
   },
   conditionTag: {
-    fontSize: 13,
+    fontSize: 12,
     color: TEXT_PRIMARY,
-    backgroundColor: ACCENT_LIGHT,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderColor: CARD_BORDER,
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   actionCard: {
-    backgroundColor: SURFACE,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 16,
+    padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowRadius: 9,
     elevation: 2,
   },
   actionText: {
-    fontSize: 15,
+    fontSize: TYPE_BODY,
     color: TEXT_PRIMARY,
+    fontWeight: '600',
   },
   actionArrow: {
-    fontSize: 16,
-    color: TEXT_SECONDARY,
+    fontSize: 18,
+    color: ACCENT,
   },
 });

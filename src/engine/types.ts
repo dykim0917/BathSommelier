@@ -1,6 +1,30 @@
 // --- Bath Environment ---
 export type BathEnvironment = 'bathtub' | 'footbath' | 'shower';
 
+// --- Recommendation Modes ---
+export type RecommendationMode = 'care' | 'trip';
+
+// --- Theme Catalog (Trip mode) ---
+export type ThemeId =
+  | 'kyoto_forest'
+  | 'rainy_camping'
+  | 'midnight_paris'
+  | 'nordic_sauna'
+  | 'desert_onsen'
+  | 'ocean_dawn'
+  | 'tea_house'
+  | 'snow_cabin';
+
+export type ThemeCoverStyleId =
+  | 'kyoto'
+  | 'rain'
+  | 'paris'
+  | 'nordic'
+  | 'desert'
+  | 'ocean'
+  | 'tea'
+  | 'snow';
+
 // --- Health Conditions (Fixed Profile) ---
 export type HealthCondition =
   | 'hypertension_heart'
@@ -72,6 +96,23 @@ export interface AmbienceTrack {
   persona: PersonaCode[];
 }
 
+// --- Theme Preset ---
+export interface ThemePreset {
+  id: ThemeId;
+  coverStyleId: ThemeCoverStyleId;
+  title: string;
+  subtitle: string;
+  baseTemp: number;
+  colorHex: string;
+  recScent: string;
+  musicId: MusicTrack['id'];
+  ambienceId: AmbienceTrack['id'];
+  defaultBathType: 'full' | 'half' | 'foot' | 'shower';
+  recommendedEnvironment: BathEnvironment;
+  durationMinutes: number | null;
+  lighting: string;
+}
+
 // --- Feedback ---
 export type BathFeedback = 'good' | 'bad' | null;
 
@@ -87,7 +128,11 @@ export interface BathSession {
 // --- Bath Recommendation Output ---
 export interface BathRecommendation {
   id: string;
+  mode: RecommendationMode;
+  themeId?: ThemeId;
+  themeTitle?: string;
   persona: PersonaCode;
+  environmentUsed: BathEnvironment;
   bathType: 'full' | 'half' | 'foot' | 'shower';
   temperature: TemperatureRange;
   durationMinutes: number | null;

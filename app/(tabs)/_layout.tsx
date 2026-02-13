@@ -1,6 +1,8 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
+import { ACCENT, APP_BG_BASE, CARD_BORDER, TEXT_PRIMARY, TEXT_SECONDARY } from '@/src/data/colors';
+import { ui } from '@/src/theme/ui';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -13,26 +15,30 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#7C3AED',
-        tabBarInactiveTintColor: '#A1A1AA',
-        tabBarStyle: {
-          backgroundColor: 'rgba(255,255,255,0.85)',
-          borderTopColor: 'rgba(0,0,0,0.06)',
-          borderTopWidth: 1,
-        },
+        tabBarActiveTintColor: ACCENT,
+        tabBarInactiveTintColor: TEXT_SECONDARY,
+        tabBarStyle: ui.tabBarStyle,
         headerStyle: {
-          backgroundColor: '#F2F0F7',
+          backgroundColor: APP_BG_BASE,
+          borderBottomColor: CARD_BORDER,
+          borderBottomWidth: 1,
         },
-        headerTintColor: '#1C1C1E',
+        headerTintColor: TEXT_PRIMARY,
         headerTitleStyle: {
           fontWeight: '700',
+          letterSpacing: 0.2,
         },
+        tabBarItemStyle: {
+          borderRadius: 12,
+          marginHorizontal: 2,
+        },
+        tabBarBackground: () => null,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: '오늘의 케어',
+          title: '홈',
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="tint" color={color} />
           ),

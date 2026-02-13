@@ -6,17 +6,22 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BathEnvironment, HealthCondition, UserProfile } from '@/src/engine/types';
 import { TagChip } from '@/src/components/TagChip';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import {
-  BG,
+  ACCENT,
+  APP_BG_BOTTOM,
+  APP_BG_TOP,
+  BTN_DISABLED,
+  BTN_PRIMARY_TEXT,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
-  WARNING_COLOR,
-  ACCENT,
+  TYPE_BODY,
+  TYPE_HEADING_LG,
 } from '@/src/data/colors';
 
 interface ConditionOption {
@@ -35,9 +40,7 @@ const CONDITIONS: ConditionOption[] = [
 
 export default function OnboardingHealth() {
   const { environment } = useLocalSearchParams<{ environment: string }>();
-  const [selectedConditions, setSelectedConditions] = useState<
-    Set<HealthCondition>
-  >(new Set());
+  const [selectedConditions, setSelectedConditions] = useState<Set<HealthCondition>>(new Set());
   const haptic = useHaptic();
   const { save } = useUserProfile();
 
@@ -78,13 +81,17 @@ export default function OnboardingHealth() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <View style={styles.decorCircle} />
+
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.step}>2 / 2</Text>
-          <Text style={styles.title}>건강 상태를{'\n'}선택해주세요</Text>
-          <Text style={styles.subtitle}>
-            안전한 입욕법을 위해 해당 사항을 모두 선택해주세요
-          </Text>
+          <Text style={styles.step}>02 / 02</Text>
+          <Text style={styles.title}>건강 상태를 선택해주세요</Text>
+          <Text style={styles.subtitle}>안전한 입욕법을 위해 해당 사항을 모두 선택해주세요</Text>
         </View>
 
         <View style={styles.conditions}>
@@ -94,7 +101,7 @@ export default function OnboardingHealth() {
               label={cond.labelKo}
               emoji={cond.emoji}
               selected={selectedConditions.has(cond.id)}
-              accentColor={cond.id === 'none' ? '#2E8B57' : WARNING_COLOR}
+              accentColor={cond.id === 'none' ? '#7AAE89' : '#D39A6F'}
               onPress={() => handleToggle(cond.id)}
             />
           ))}
@@ -103,10 +110,7 @@ export default function OnboardingHealth() {
         <View style={styles.spacer} />
 
         <Pressable
-          style={[
-            styles.completeButton,
-            !hasSelection && styles.completeButtonDisabled,
-          ]}
+          style={[styles.completeButton, !hasSelection && styles.completeButtonDisabled]}
           onPress={handleComplete}
           disabled={!hasSelection}
         >
@@ -120,32 +124,41 @@ export default function OnboardingHealth() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: BG,
+  },
+  decorCircle: {
+    position: 'absolute',
+    right: -35,
+    top: 56,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(120,149,207,0.22)',
   },
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
   header: {
-    marginBottom: 36,
+    marginBottom: 24,
   },
   step: {
-    fontSize: 14,
+    fontSize: 12,
     color: TEXT_SECONDARY,
-    marginBottom: 12,
+    marginBottom: 10,
+    fontWeight: '600',
   },
   title: {
-    fontSize: 28,
+    fontSize: TYPE_HEADING_LG,
     fontWeight: '800',
     color: TEXT_PRIMARY,
-    lineHeight: 38,
+    lineHeight: 36,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: TYPE_BODY,
     color: TEXT_SECONDARY,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   conditions: {
     flexDirection: 'row',
@@ -156,17 +169,17 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     backgroundColor: ACCENT,
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: 999,
+    paddingVertical: 15,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   completeButtonDisabled: {
-    opacity: 0.4,
+    backgroundColor: BTN_DISABLED,
   },
   completeText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    color: BTN_PRIMARY_TEXT,
   },
 });

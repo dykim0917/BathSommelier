@@ -15,9 +15,11 @@ import { getTimeBasedMessage } from '@/src/utils/messages';
 import { GradientBackground } from '@/src/components/GradientBackground';
 import {
   BG,
-  SURFACE,
-  GLASS_BORDER,
-  GLASS_SHADOW,
+  CARD_BORDER_SOFT,
+  CARD_GLASS,
+  CARD_SHADOW_SOFT,
+  PASTEL_BG_BOTTOM,
+  PASTEL_BG_TOP,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   ACCENT,
@@ -61,16 +63,19 @@ export default function CompletionScreen() {
   }
 
   const timeMessage = getTimeBasedMessage();
+  const feedbackTitle = recommendation.themeTitle
+    ? `오늘의 ${recommendation.themeTitle} 어떠셨나요?`
+    : '오늘의 목욕은 어떠셨나요?';
 
   return (
     <View style={styles.container}>
       <GradientBackground
-        colorHex={recommendation.colorHex}
+        colorHex={PASTEL_BG_TOP}
         style={StyleSheet.absoluteFillObject}
       >
+        <View style={styles.softOverlay} />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.content}>
-            {/* Celebration emoji with bounce */}
             <Animated.Text
               entering={BounceIn.duration(800)}
               style={styles.celebrationEmoji}
@@ -78,28 +83,25 @@ export default function CompletionScreen() {
               🎉
             </Animated.Text>
 
-            {/* Time-based message */}
             <Animated.View entering={FadeIn.duration(600).delay(400)}>
               <Text style={styles.mainMessage}>{timeMessage}</Text>
             </Animated.View>
 
-            {/* Monthly stats */}
             <Animated.View
               entering={FadeIn.duration(600).delay(600)}
               style={styles.statsCard}
             >
               <Text style={styles.statsEmoji}>📊</Text>
               <Text style={styles.statsText}>
-                이번 달 <Text style={[styles.statsHighlight, { color: recommendation.colorHex }]}>{monthlyCount}번째</Text> 입욕이에요
+                이번 달 <Text style={[styles.statsHighlight, { color: recommendation.colorHex }]}>{monthlyCount}번째</Text> 힐링 완료
               </Text>
             </Animated.View>
 
-            {/* Feedback */}
             <Animated.View
               entering={FadeIn.duration(600).delay(800)}
               style={styles.feedbackSection}
             >
-              <Text style={styles.feedbackTitle}>오늘의 목욕은 어떠셨나요?</Text>
+              <Text style={styles.feedbackTitle}>{feedbackTitle}</Text>
               <View style={styles.feedbackButtons}>
                 <TouchableOpacity
                   style={[
@@ -143,7 +145,6 @@ export default function CompletionScreen() {
               )}
             </Animated.View>
 
-            {/* Home button */}
             <Animated.View entering={FadeIn.duration(500).delay(1000)}>
               <TouchableOpacity
                 style={styles.homeButton}
@@ -172,6 +173,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  softOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: PASTEL_BG_BOTTOM + '88',
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
@@ -193,14 +198,14 @@ const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SURFACE,
-    borderRadius: 16,
+    backgroundColor: CARD_GLASS,
+    borderRadius: 18,
     paddingVertical: 16,
     paddingHorizontal: 24,
     marginBottom: 28,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
+    borderColor: CARD_BORDER_SOFT,
+    shadowColor: CARD_SHADOW_SOFT,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,
@@ -235,13 +240,13 @@ const styles = StyleSheet.create({
   },
   feedbackButton: {
     alignItems: 'center',
-    backgroundColor: SURFACE,
-    borderRadius: 16,
-    paddingVertical: 16,
+    backgroundColor: CARD_GLASS,
+    borderRadius: 18,
+    paddingVertical: 14,
     paddingHorizontal: 28,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
+    borderColor: CARD_BORDER_SOFT,
+    shadowColor: CARD_SHADOW_SOFT,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,

@@ -6,18 +6,24 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { BathEnvironment } from '@/src/engine/types';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import {
-  BG,
-  SURFACE,
-  GLASS_BORDER,
-  GLASS_SHADOW,
+  ACCENT,
+  APP_BG_BOTTOM,
+  APP_BG_TOP,
+  BTN_DISABLED,
+  BTN_PRIMARY_TEXT,
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
-  ACCENT,
-  ACCENT_LIGHT,
+  TYPE_BODY,
+  TYPE_HEADING_LG,
+  TYPE_TITLE,
 } from '@/src/data/colors';
 
 const ENVIRONMENTS: {
@@ -66,35 +72,36 @@ export default function OnboardingEnvironment() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <View style={styles.bloomPink} />
+      <View style={styles.bloomBlue} />
+
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.step}>1 / 2</Text>
-          <Text style={styles.title}>나의 목욕 환경을{'\n'}알려주세요</Text>
-          <Text style={styles.subtitle}>
-            환경에 맞는 최적의 레시피를 추천해드립니다
-          </Text>
+          <Text style={styles.step}>01 / 02</Text>
+          <Text style={styles.title}>나의 목욕 환경을 알려주세요</Text>
+          <Text style={styles.subtitle}>환경에 맞는 최적의 레시피를 추천해드립니다</Text>
         </View>
 
         <View style={styles.cards}>
           {ENVIRONMENTS.map((env) => (
             <TouchableOpacity
               key={env.id}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
               onPress={() => handleSelect(env.id)}
               style={[
                 styles.card,
-                selected === env.id && styles.cardSelected,
+                selected === env.id && {
+                  borderColor: ACCENT,
+                  backgroundColor: '#EDF3FF',
+                },
               ]}
             >
               <Text style={styles.emoji}>{env.emoji}</Text>
-              <Text
-                style={[
-                  styles.cardLabel,
-                  selected === env.id && styles.cardLabelSelected,
-                ]}
-              >
-                {env.labelKo}
-              </Text>
+              <Text style={styles.cardLabel}>{env.labelKo}</Text>
               <Text style={styles.cardDesc}>{env.desc}</Text>
             </TouchableOpacity>
           ))}
@@ -103,7 +110,7 @@ export default function OnboardingEnvironment() {
 
       <View style={styles.bottomArea}>
         <TouchableOpacity
-          activeOpacity={0.7}
+          activeOpacity={0.85}
           onPress={handleNext}
           disabled={!selected}
           style={[styles.nextButton, !selected && styles.nextButtonDisabled]}
@@ -118,89 +125,100 @@ export default function OnboardingEnvironment() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: BG,
+  },
+  bloomPink: {
+    position: 'absolute',
+    right: -46,
+    top: 84,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(248,208,208,0.35)',
+  },
+  bloomBlue: {
+    position: 'absolute',
+    left: -56,
+    bottom: 120,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(120,149,207,0.22)',
   },
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
   header: {
-    marginBottom: 36,
+    marginBottom: 20,
   },
   step: {
-    fontSize: 14,
+    fontSize: 12,
     color: TEXT_SECONDARY,
-    marginBottom: 12,
+    marginBottom: 10,
+    fontWeight: '600',
   },
   title: {
-    fontSize: 28,
+    fontSize: TYPE_HEADING_LG,
     fontWeight: '800',
     color: TEXT_PRIMARY,
-    lineHeight: 38,
+    lineHeight: 36,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: TYPE_BODY,
     color: TEXT_SECONDARY,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   cards: {
     flex: 1,
-    gap: 12,
+    gap: 10,
   },
   card: {
-    backgroundColor: SURFACE,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: GLASS_BORDER,
-    padding: 24,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    padding: 18,
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    shadowColor: GLASS_SHADOW,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 3,
   },
-  cardSelected: {
-    borderColor: ACCENT,
-    backgroundColor: ACCENT_LIGHT,
-  },
   emoji: {
-    fontSize: 40,
-    marginBottom: 12,
+    fontSize: 34,
+    marginBottom: 10,
   },
   cardLabel: {
-    fontSize: 20,
+    fontSize: TYPE_TITLE,
     fontWeight: '700',
     color: TEXT_PRIMARY,
     marginBottom: 4,
   },
-  cardLabelSelected: {
-    color: ACCENT,
-  },
   cardDesc: {
-    fontSize: 13,
+    fontSize: 12,
     color: TEXT_SECONDARY,
   },
   bottomArea: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   nextButton: {
     backgroundColor: ACCENT,
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: 999,
+    paddingVertical: 15,
     alignItems: 'center',
   },
   nextButtonDisabled: {
-    opacity: 0.4,
+    backgroundColor: BTN_DISABLED,
   },
   nextText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    color: BTN_PRIMARY_TEXT,
   },
 });

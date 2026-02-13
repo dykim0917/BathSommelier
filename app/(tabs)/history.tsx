@@ -6,18 +6,23 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { BathRecommendation } from '@/src/engine/types';
 import { loadHistory } from '@/src/storage/history';
 import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { formatDuration } from '@/src/utils/time';
 import {
-  BG,
-  SURFACE,
-  GLASS_BORDER,
-  GLASS_SHADOW,
+  APP_BG_BOTTOM,
+  APP_BG_TOP,
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
+  TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
+  TYPE_CAPTION,
+  TYPE_TITLE,
 } from '@/src/data/colors';
 
 const BATH_TYPE_LABELS: Record<string, string> = {
@@ -26,6 +31,17 @@ const BATH_TYPE_LABELS: Record<string, string> = {
   foot: '족욕',
   shower: '샤워',
 };
+
+const MODE_LABELS = {
+  care: 'CARE',
+  trip: 'TRIP',
+} as const;
+
+const ENV_LABELS = {
+  bathtub: '욕조',
+  footbath: '족욕',
+  shower: '샤워',
+} as const;
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<BathRecommendation[]>([]);
@@ -48,11 +64,26 @@ export default function HistoryScreen() {
       >
         <View style={[styles.colorDot, { backgroundColor: item.colorHex }]} />
         <View style={styles.cardContent}>
-          <Text style={styles.cardTitle}>{persona?.nameKo ?? '맞춤 케어'}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.cardTitle}>
+              {item.themeTitle ?? persona?.nameKo ?? '맞춤 케어'}
+            </Text>
+            <View
+              style={[
+                styles.modeBadge,
+                {
+                  borderColor: item.mode === 'trip' ? '#8B7FD6' : '#7A9FD3',
+                },
+              ]}
+            >
+              <Text style={styles.modeBadgeText}>{MODE_LABELS[item.mode]}</Text>
+            </View>
+          </View>
+
           <Text style={styles.cardMeta}>
-            {item.temperature.recommended}°C · {BATH_TYPE_LABELS[item.bathType]} ·{' '}
-            {formatDuration(item.durationMinutes)}
+            {item.temperature.recommended}°C · {BATH_TYPE_LABELS[item.bathType]} · {formatDuration(item.durationMinutes)}
           </Text>
+          <Text style={styles.cardSubMeta}>환경: {ENV_LABELS[item.environmentUsed]}</Text>
         </View>
         <Text style={styles.cardDate}>{dateStr}</Text>
       </Pressable>
@@ -61,13 +92,16 @@ export default function HistoryScreen() {
 
   return (
     <View style={styles.container}>
+      <LinearGradient
+        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
+        style={StyleSheet.absoluteFillObject}
+      />
+
       {history.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>📋</Text>
           <Text style={styles.emptyText}>아직 기록이 없어요</Text>
-          <Text style={styles.emptySubtext}>
-            첫 번째 목욕 레시피를 받아보세요
-          </Text>
+          <Text style={styles.emptySubtext}>첫 번째 목욕 레시피를 받아보세요</Text>
         </View>
       ) : (
         <FlatList
@@ -85,48 +119,72 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
   },
   list: {
     padding: 16,
+    paddingBottom: 24,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SURFACE,
-    borderRadius: 14,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 18,
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowRadius: 12,
+    elevation: 3,
   },
   colorDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    marginRight: 14,
+    marginRight: 12,
   },
   cardContent: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 3,
+  },
   cardTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: TYPE_TITLE,
+    fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 2,
+    flexShrink: 1,
+  },
+  modeBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+  },
+  modeBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: TEXT_SECONDARY,
+    letterSpacing: 0.4,
   },
   cardMeta: {
     fontSize: 13,
     color: TEXT_SECONDARY,
   },
+  cardSubMeta: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    marginTop: 2,
+  },
   cardDate: {
-    fontSize: 12,
-    color: TEXT_SECONDARY,
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
     marginLeft: 8,
   },
   emptyContainer: {
@@ -139,13 +197,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPE_TITLE,
+    fontWeight: '700',
     color: TEXT_PRIMARY,
     marginBottom: 4,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 13,
     color: TEXT_SECONDARY,
   },
 });

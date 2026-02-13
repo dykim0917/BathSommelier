@@ -4,7 +4,15 @@ import { BathRecommendation } from '@/src/engine/types';
 import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { formatTemperature, formatTemperatureRange } from '@/src/utils/temperature';
 import { formatDuration } from '@/src/utils/time';
-import { TEXT_PRIMARY, TEXT_SECONDARY, SURFACE, GLASS_BORDER, GLASS_SHADOW } from '@/src/data/colors';
+import {
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  TYPE_CAPTION,
+  TYPE_TITLE,
+} from '@/src/data/colors';
 
 interface PersonaCardProps {
   recommendation: BathRecommendation;
@@ -22,38 +30,32 @@ export function PersonaCard({ recommendation }: PersonaCardProps) {
     (p) => p.code === recommendation.persona
   );
 
+  const title = recommendation.mode === 'trip'
+    ? recommendation.themeTitle ?? 'Trip 테마'
+    : persona?.nameKo ?? '맞춤 케어';
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.personaName, { color: recommendation.colorHex }]}>
-        {persona?.nameKo ?? '맞춤 케어'}
-      </Text>
+      <Text style={[styles.personaName, { color: recommendation.colorHex }]}>{title}</Text>
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>
-            {formatTemperature(recommendation.temperature)}
-          </Text>
+          <Text style={styles.statValue}>{formatTemperature(recommendation.temperature)}</Text>
           <Text style={styles.statLabel}>수온</Text>
-          <Text style={styles.statSub}>
-            ({formatTemperatureRange(recommendation.temperature)})
-          </Text>
+          <Text style={styles.statSub}>({formatTemperatureRange(recommendation.temperature)})</Text>
         </View>
 
         <View style={[styles.divider, { backgroundColor: recommendation.colorHex + '40' }]} />
 
         <View style={styles.stat}>
-          <Text style={styles.statValue}>
-            {formatDuration(recommendation.durationMinutes)}
-          </Text>
+          <Text style={styles.statValue}>{formatDuration(recommendation.durationMinutes)}</Text>
           <Text style={styles.statLabel}>시간</Text>
         </View>
 
         <View style={[styles.divider, { backgroundColor: recommendation.colorHex + '40' }]} />
 
         <View style={styles.stat}>
-          <Text style={styles.statValue}>
-            {BATH_TYPE_LABELS[recommendation.bathType]}
-          </Text>
+          <Text style={styles.statValue}>{BATH_TYPE_LABELS[recommendation.bathType]}</Text>
           <Text style={styles.statLabel}>입욕 방법</Text>
         </View>
       </View>
@@ -68,26 +70,26 @@ export function PersonaCard({ recommendation }: PersonaCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    marginVertical: 10,
   },
   personaName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 24,
-    letterSpacing: 1,
+    marginBottom: 16,
+    letterSpacing: 0.8,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SURFACE,
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 12,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,
@@ -98,34 +100,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 22,
+    fontSize: TYPE_TITLE,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 4,
+    marginBottom: 2,
+    textAlign: 'center',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPE_CAPTION,
     color: TEXT_SECONDARY,
   },
   statSub: {
-    fontSize: 11,
+    fontSize: 10,
     color: TEXT_SECONDARY,
     marginTop: 2,
   },
   divider: {
     width: 1,
-    height: 40,
+    height: 38,
   },
   lightingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    backgroundColor: SURFACE,
-    borderRadius: 12,
-    padding: 14,
+    marginTop: 16,
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    shadowColor: GLASS_SHADOW,
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,

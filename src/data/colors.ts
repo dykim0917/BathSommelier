@@ -1,40 +1,84 @@
 import { PersonaCode } from '@/src/engine/types';
 
-// === Persona Colors (Pastel) ===
+// === v3.2 Reference UI Palette ===
+export const APP_BG_BASE = '#F6FAFF';
+export const APP_BG_TOP = '#F2F7FF';
+export const APP_BG_BOTTOM = '#F8EFF6';
+export const APP_BLOOM_BLUE = 'rgba(120, 149, 207, 0.25)';
+export const APP_BLOOM_PINK = 'rgba(248, 208, 208, 0.22)';
+
+// === Cards / Surfaces ===
+export const CARD_SURFACE = 'rgba(255,255,255,0.82)';
+export const CARD_SURFACE_SOFT = 'rgba(255,255,255,0.74)';
+export const CARD_BORDER = 'rgba(150, 170, 205, 0.28)';
+export const CARD_BORDER_STRONG = 'rgba(103, 133, 184, 0.42)';
+export const CARD_SHADOW = 'rgba(39, 62, 102, 0.12)';
+
+// === Typography scale ===
+export const TYPE_HEADING_LG = 30;
+export const TYPE_HEADING_MD = 22;
+export const TYPE_TITLE = 18;
+export const TYPE_BODY = 14;
+export const TYPE_CAPTION = 12;
+
+export const TYPE_SCALE = {
+  headingLg: TYPE_HEADING_LG,
+  headingMd: TYPE_HEADING_MD,
+  title: TYPE_TITLE,
+  body: TYPE_BODY,
+  caption: TYPE_CAPTION,
+} as const;
+
+// === Text ===
+export const TEXT_PRIMARY = '#2A3E64';
+export const TEXT_SECONDARY = '#617493';
+export const TEXT_MUTED = '#8FA0BA';
+
+// === Controls ===
+export const BTN_PRIMARY = '#7895CF';
+export const BTN_PRIMARY_TEXT = '#FDFEFF';
+export const BTN_DISABLED = '#C8D4EA';
+export const PILL_BG = 'rgba(255,255,255,0.78)';
+export const PILL_BORDER = 'rgba(120,149,207,0.35)';
+export const PILL_ACTIVE_BG = '#E6EEFB';
+
+// === Accent / Semantic ===
+export const ACCENT = '#7895CF';
+export const ACCENT_LIGHT = '#ECF1FC';
+export const WARNING_COLOR = '#F0A55C';
+export const DANGER_COLOR = '#E96F7F';
+
+// === Persona Colors (Pastel compatible) ===
 export const PERSONA_COLORS: Record<PersonaCode, string> = {
-  P1_SAFETY: '#86EFAC',
-  P2_CIRCULATION: '#FDBA74',
-  P3_MUSCLE: '#93C5FD',
-  P4_SLEEP: '#C4B5FD',
+  P1_SAFETY: '#8CB59C',
+  P2_CIRCULATION: '#D6A77A',
+  P3_MUSCLE: '#7FA0D8',
+  P4_SLEEP: '#A89DDB',
 } as const;
 
 export const PERSONA_GRADIENTS: Record<PersonaCode, [string, string]> = {
-  P1_SAFETY: ['#86EFAC', '#BBF7D0'],
-  P2_CIRCULATION: ['#FDBA74', '#FED7AA'],
-  P3_MUSCLE: ['#93C5FD', '#BFDBFE'],
-  P4_SLEEP: ['#C4B5FD', '#DDD6FE'],
+  P1_SAFETY: ['#D8ECDE', '#A4C9B1'],
+  P2_CIRCULATION: ['#F0D5BC', '#D7AD85'],
+  P3_MUSCLE: ['#DCE6F8', '#9AB5E5'],
+  P4_SLEEP: ['#E8E1F9', '#B9ACE6'],
 } as const;
 
-// === Liquid Glass Base ===
-export const BG = '#F2F0F7';
-export const SURFACE = 'rgba(255,255,255,0.72)';
-export const GLASS_BORDER = 'rgba(255,255,255,0.5)';
-export const GLASS_SHADOW = 'rgba(0,0,0,0.06)';
-export const OVERLAY = 'rgba(255,255,255,0.85)';
+// === Compatibility aliases (keep old imports stable) ===
+export const BG = APP_BG_BASE;
+export const SURFACE = CARD_SURFACE;
+export const GLASS_BORDER = CARD_BORDER;
+export const GLASS_SHADOW = CARD_SHADOW;
+export const OVERLAY = CARD_SURFACE_SOFT;
 
-// === Text ===
-export const TEXT_PRIMARY = '#1C1C1E';
-export const TEXT_SECONDARY = '#6E6E73';
+export const CARD_GLASS = CARD_SURFACE;
+export const CARD_BORDER_SOFT = CARD_BORDER;
+export const CARD_SHADOW_SOFT = CARD_SHADOW;
 
-// === Accent ===
-export const ACCENT = '#7C3AED';
-export const ACCENT_LIGHT = '#EDE9FE';
+export const PASTEL_BG_TOP = APP_BG_TOP;
+export const PASTEL_BG_BOTTOM = APP_BG_BOTTOM;
+export const PASTEL_BLOOM_BLUE = APP_BLOOM_BLUE;
+export const PASTEL_BLOOM_PINK = APP_BLOOM_PINK;
 
-// === Semantic ===
-export const WARNING_COLOR = '#FF9F0A';
-export const DANGER_COLOR = '#FF6B6B';
-
-// === Legacy aliases (기존 import 호환) ===
-export const DARK_BG = BG;
-export const DARK_SURFACE = SURFACE;
-export const DARK_CARD = SURFACE;
+export const DARK_BG = APP_BG_BASE;
+export const DARK_SURFACE = CARD_SURFACE;
+export const DARK_CARD = CARD_SURFACE;

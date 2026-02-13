@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { APP_BG_BASE, CARD_BORDER, CARD_SURFACE, TEXT_PRIMARY, ACCENT } from '@/src/data/colors';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -19,11 +20,11 @@ const LiquidGlassTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#F2F0F7',
-    card: 'rgba(255,255,255,0.72)',
-    text: '#1C1C1E',
-    border: 'rgba(0,0,0,0.06)',
-    primary: '#7C3AED',
+    background: APP_BG_BASE,
+    card: CARD_SURFACE,
+    text: TEXT_PRIMARY,
+    border: CARD_BORDER,
+    primary: ACCENT,
   },
 };
 

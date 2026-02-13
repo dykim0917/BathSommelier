@@ -1,11 +1,14 @@
 import { Ingredient } from '@/src/engine/types';
 
+const DUMMY_SHOP_BASE = 'https://example.com/shop';
+
 export const INGREDIENTS: Ingredient[] = [
   {
     id: 'lavender_oil',
     nameKo: '라벤더 에센셜 오일',
     nameEn: 'Lavender Essential Oil',
     description: '진정·수면 유도, 스트레스 완화에 효과적인 대표 아로마 오일',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/lavender-oil`,
     contraindications: [],
   },
   {
@@ -13,6 +16,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '마조람 에센셜 오일',
     nameEn: 'Marjoram Essential Oil',
     description: '혈압 안정, 근육 이완 효과. 고혈압 환자에게 안전한 오일',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/marjoram-oil`,
     contraindications: [],
   },
   {
@@ -20,6 +24,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '탄산 입욕제',
     nameEn: 'Carbonated Bath Tablet',
     description: '탄산가스가 혈관을 확장하여 혈액순환 촉진',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/carbonated-bath`,
     contraindications: [],
   },
   {
@@ -27,6 +32,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '자몽 에센셜 오일',
     nameEn: 'Grapefruit Essential Oil',
     description: '림프 순환 촉진, 부종 완화에 효과적',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/grapefruit-oil`,
     contraindications: ['sensitive_skin'],
   },
   {
@@ -34,6 +40,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '엡섬 솔트 (황산마그네슘)',
     nameEn: 'Epsom Salt',
     description: '마그네슘 흡수를 통한 근육 이완, 통증 완화',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/epsom-salt`,
     contraindications: [],
   },
   {
@@ -41,6 +48,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '페퍼민트 에센셜 오일',
     nameEn: 'Peppermint Essential Oil',
     description: '쿨링 효과, 근육통 완화, 두통 완화',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/peppermint-oil`,
     contraindications: ['pregnant'],
   },
   {
@@ -48,6 +56,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '히노끼 (편백) 오일',
     nameEn: 'Hinoki (Japanese Cypress) Oil',
     description: '삼림욕 효과, 심신 안정, 항균 작용',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/hinoki-oil`,
     contraindications: [],
   },
   {
@@ -55,6 +64,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '로즈마리 에센셜 오일',
     nameEn: 'Rosemary Essential Oil',
     description: '혈액순환 촉진, 집중력 향상, 근육 이완',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/rosemary-oil`,
     contraindications: ['pregnant', 'hypertension_heart'],
   },
   {
@@ -62,6 +72,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '클라리 세이지 오일',
     nameEn: 'Clary Sage Oil',
     description: '생리통 완화, 호르몬 밸런스 조절',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/clary-sage-oil`,
     contraindications: ['pregnant'],
   },
   {
@@ -69,6 +80,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '유칼립투스 오일',
     nameEn: 'Eucalyptus Oil',
     description: '호흡기 개선, 감기 증상 완화, 항균 효과',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/eucalyptus-oil`,
     contraindications: [],
   },
   {
@@ -76,6 +88,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '캐모마일 에센셜 오일',
     nameEn: 'Chamomile Essential Oil',
     description: '진정, 항염, 민감한 피부에도 안전',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/chamomile-oil`,
     contraindications: [],
   },
   {
@@ -83,6 +96,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '샤워 스티머',
     nameEn: 'Shower Steamer',
     description: '샤워 시 바닥에 놓으면 증기와 함께 아로마 확산',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/shower-steamer`,
     contraindications: [],
   },
   {
@@ -90,6 +104,7 @@ export const INGREDIENTS: Ingredient[] = [
     nameKo: '릴랙싱 바디워시',
     nameEn: 'Relaxing Body Wash',
     description: '라벤더/캐모마일 성분의 편안한 바디워시',
+    purchaseUrl: `${DUMMY_SHOP_BASE}/relaxing-body-wash`,
     contraindications: [],
   },
 ];

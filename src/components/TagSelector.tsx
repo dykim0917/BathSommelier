@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { TagChip } from './TagChip';
 import { TagDefinition } from '@/src/data/tags';
 import { useHaptic } from '@/src/hooks/useHaptic';
-import { TEXT_PRIMARY, TEXT_SECONDARY } from '@/src/data/colors';
+import { CARD_BORDER, CARD_SHADOW, CARD_SURFACE, TEXT_PRIMARY, TEXT_SECONDARY } from '@/src/data/colors';
 
 interface TagSelectorProps {
   title: string;
@@ -48,14 +48,24 @@ export function TagSelector({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: 16,
+    backgroundColor: CARD_SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    borderRadius: 18,
+    padding: 14,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 9,
+    elevation: 2,
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 12,
-    letterSpacing: 0.3,
+    marginBottom: 10,
+    letterSpacing: 0.2,
   },
   tagsRow: {
     flexDirection: 'row',

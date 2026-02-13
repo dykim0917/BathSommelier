@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
 import Animated, {
   FadeIn,
@@ -20,9 +21,19 @@ import { BathRecommendation } from '@/src/engine/types';
 import { getRecommendationById } from '@/src/storage/history';
 import { saveSession } from '@/src/storage/session';
 import { WaterAnimation } from '@/src/components/WaterAnimation';
+import { SteamAnimation } from '@/src/components/SteamAnimation';
 import { AudioMixer } from '@/src/components/AudioMixer';
 import { useDualAudioPlayer } from '@/src/hooks/useDualAudioPlayer';
-import { BG, TEXT_PRIMARY, TEXT_SECONDARY, SURFACE, GLASS_BORDER, GLASS_SHADOW } from '@/src/data/colors';
+import {
+  APP_BG_BOTTOM,
+  APP_BG_TOP,
+  BG,
+  CARD_BORDER_SOFT,
+  CARD_GLASS,
+  CARD_SHADOW_SOFT,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+} from '@/src/data/colors';
 
 export default function TimerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,13 +46,18 @@ export default function TimerScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<string>(new Date().toISOString());
 
-  // Dual audio player
   const audio = useDualAudioPlayer(
     recommendation?.music ?? null,
     recommendation?.ambience ?? null,
   );
+  const {
+    play: playAudio,
+    pause: pauseAudio,
+    stop: stopAudio,
+    setMusicVolume,
+    setAmbienceVolume,
+  } = audio;
 
-  // Controls fade animation
   const controlsOpacity = useSharedValue(1);
   const controlsStyle = useAnimatedStyle(() => ({
     opacity: controlsOpacity.value,
@@ -59,7 +75,6 @@ export default function TimerScreen() {
     });
   }, [id]);
 
-  // Save session on mount
   useEffect(() => {
     if (!id) return;
     startedAtRef.current = new Date().toISOString();
@@ -69,18 +84,27 @@ export default function TimerScreen() {
     });
   }, [id]);
 
-  // Start timer & audio when recommendation loads
+  const handleComplete = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    stopAudio();
+    router.replace(`/result/completion/${id}`);
+  }, [id, stopAudio]);
+
   useEffect(() => {
     if (!recommendation || totalSeconds === 0) return;
 
-    audio.play();
+    playAudio();
 
     timerRef.current = setInterval(() => {
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          timerRef.current = null;
-          // Timer complete
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           handleComplete();
           return 0;
@@ -91,46 +115,40 @@ export default function TimerScreen() {
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      audio.stop();
+      stopAudio();
     };
-  }, [recommendation, totalSeconds]);
+  }, [recommendation, totalSeconds, handleComplete, playAudio, stopAudio]);
 
-  // Handle pause/resume
   useEffect(() => {
     if (!recommendation) return;
+
     if (isPaused) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      audio.pause();
-    } else {
-      if (!timerRef.current && remainingSeconds > 0) {
-        audio.play();
-        timerRef.current = setInterval(() => {
-          setRemainingSeconds((prev) => {
-            if (prev <= 1) {
-              clearInterval(timerRef.current!);
-              timerRef.current = null;
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              handleComplete();
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }
+      pauseAudio();
+      return;
     }
-  }, [isPaused]);
 
-  const handleComplete = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+    if (!timerRef.current && remainingSeconds > 0) {
+      playAudio();
+      timerRef.current = setInterval(() => {
+        setRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            handleComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
-    audio.stop();
-    router.replace(`/result/completion/${id}`);
-  }, [id, audio]);
+  }, [isPaused, recommendation, remainingSeconds, handleComplete, pauseAudio, playAudio]);
 
   const toggleControls = () => {
     const newVal = !showControls;
@@ -151,26 +169,30 @@ export default function TimerScreen() {
     );
   }
 
-  // Format time
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  // Water progress (1 = full, drains to 0)
   const waterProgress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 1;
+  const isShowerImmersive = recommendation.environmentUsed === 'shower' || recommendation.bathType === 'shower';
 
   return (
     <View style={styles.container}>
-      {/* Water animation background */}
-      <WaterAnimation
-        progress={waterProgress}
-        colorHex={recommendation.colorHex}
+      <LinearGradient
+        colors={[APP_BG_TOP + '88', APP_BG_BOTTOM + '88']}
+        style={StyleSheet.absoluteFillObject}
       />
+      {isShowerImmersive ? (
+        <SteamAnimation colorHex={recommendation.colorHex} />
+      ) : (
+        <WaterAnimation
+          progress={waterProgress}
+          colorHex={recommendation.colorHex}
+        />
+      )}
 
-      {/* Tap area to toggle controls */}
       <Pressable style={StyleSheet.absoluteFill} onPress={toggleControls}>
         <SafeAreaView style={styles.safeArea}>
-          {/* Timer display — always visible */}
           <View style={styles.timerContainer}>
             <Text style={styles.timerText}>{timeStr}</Text>
             {isPaused && (
@@ -184,22 +206,19 @@ export default function TimerScreen() {
             )}
           </View>
 
-          {/* Controls overlay */}
           <Animated.View style={[styles.controlsContainer, controlsStyle]}>
             {showControls && (
               <>
-                {/* Audio Mixer */}
                 <View style={styles.mixerContainer}>
                   <AudioMixer
                     music={recommendation.music}
                     ambience={recommendation.ambience}
                     accentColor={recommendation.colorHex}
-                    onMusicVolumeChange={audio.setMusicVolume}
-                    onAmbienceVolumeChange={audio.setAmbienceVolume}
+                    onMusicVolumeChange={setMusicVolume}
+                    onAmbienceVolumeChange={setAmbienceVolume}
                   />
                 </View>
 
-                {/* Buttons */}
                 <View style={styles.buttonsRow}>
                   <TouchableOpacity
                     style={[styles.controlButton, styles.pauseButton]}
@@ -216,7 +235,7 @@ export default function TimerScreen() {
                     onPress={handleComplete}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.controlButtonText}>✓ 입욕 완료</Text>
+                    <Text style={styles.finishButtonText}>끝내기</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -232,6 +251,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: BG,
+    overflow: 'hidden',
   },
   centered: {
     justifyContent: 'center',
@@ -260,7 +280,7 @@ const styles = StyleSheet.create({
   },
   controlsContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 18,
   },
   mixerContainer: {
     marginBottom: 16,
@@ -271,23 +291,28 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     flex: 1,
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: 18,
+    paddingVertical: 15,
     alignItems: 'center',
-    shadowColor: '#000',
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    shadowColor: CARD_SHADOW_SOFT,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 2,
   },
   pauseButton: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    backgroundColor: CARD_GLASS,
   },
   controlButtonText: {
     fontSize: 15,
     fontWeight: '600',
     color: TEXT_PRIMARY,
+  },
+  finishButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

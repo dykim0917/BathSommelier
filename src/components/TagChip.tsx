@@ -1,13 +1,13 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import {
-  SURFACE,
-  GLASS_BORDER,
-  GLASS_SHADOW,
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   ACCENT,
-  ACCENT_LIGHT,
+  PILL_ACTIVE_BG,
 } from '@/src/data/colors';
 
 interface TagChipProps {
@@ -32,7 +32,7 @@ export function TagChip({
       style={[
         styles.chip,
         selected && {
-          backgroundColor: ACCENT_LIGHT,
+          backgroundColor: PILL_ACTIVE_BG,
           borderColor: accentColor,
         },
       ]}
@@ -51,14 +51,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0,0,0,0.08)',
-    backgroundColor: SURFACE,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    backgroundColor: CARD_SURFACE,
     marginRight: 8,
     marginBottom: 8,
     gap: 6,
-    shadowColor: GLASS_SHADOW,
+    shadowColor: CARD_SHADOW,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     color: TEXT_SECONDARY,
     fontWeight: '500',
   },
