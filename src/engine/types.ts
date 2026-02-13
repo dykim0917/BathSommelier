@@ -63,6 +63,27 @@ export interface MusicTrack {
   persona: PersonaCode[];
 }
 
+// --- Ambience Track (ASMR / Nature sounds) ---
+export interface AmbienceTrack {
+  id: string;
+  title: string;
+  filename: string;
+  durationSeconds: number;
+  persona: PersonaCode[];
+}
+
+// --- Feedback ---
+export type BathFeedback = 'good' | 'bad' | null;
+
+// --- Active Session (ephemeral) ---
+export interface BathSession {
+  recommendationId: string;
+  startedAt: string;
+  completedAt?: string;
+  feedback?: BathFeedback;
+  actualDurationSeconds?: number;
+}
+
 // --- Bath Recommendation Output ---
 export interface BathRecommendation {
   id: string;
@@ -72,10 +93,12 @@ export interface BathRecommendation {
   durationMinutes: number | null;
   ingredients: Ingredient[];
   music: MusicTrack;
+  ambience: AmbienceTrack;
   lighting: string;
   safetyWarnings: string[];
   colorHex: string;
   createdAt: string;
+  feedback?: BathFeedback;
 }
 
 // --- Safety Rule ---

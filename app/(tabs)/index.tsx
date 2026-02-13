@@ -57,14 +57,14 @@ export default function DailyCheckScreen() {
       setPendingRecId(recommendation.id);
       setWarningVisible(true);
     } else {
-      router.push(`/result/${recommendation.id}`);
+      router.push(`/result/recipe/${recommendation.id}`);
     }
   };
 
   const handleWarningDismiss = () => {
     setWarningVisible(false);
     if (pendingRecId) {
-      router.push(`/result/${pendingRecId}`);
+      router.push(`/result/recipe/${pendingRecId}`);
       setPendingRecId(null);
     }
   };
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 100,
+    paddingBottom: 20,
   },
   greeting: {
     fontSize: 26,
@@ -161,12 +161,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 20,
-    paddingBottom: 34,
+    paddingBottom: 12,
     paddingTop: 12,
     backgroundColor: OVERLAY,
   },

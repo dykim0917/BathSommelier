@@ -57,10 +57,27 @@ export default function RootLayout() {
           options={{ headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen
-          name="result/[id]"
+          name="result/recipe/[id]"
           options={{
             headerShown: false,
             presentation: 'modal',
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="result/timer/[id]"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="result/completion/[id]"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            gestureEnabled: false,
           }}
         />
       </Stack>

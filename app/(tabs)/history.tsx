@@ -44,7 +44,7 @@ export default function HistoryScreen() {
     return (
       <Pressable
         style={styles.card}
-        onPress={() => router.push(`/result/${item.id}`)}
+        onPress={() => router.push(`/result/recipe/${item.id}`)}
       >
         <View style={[styles.colorDot, { backgroundColor: item.colorHex }]} />
         <View style={styles.cardContent}>

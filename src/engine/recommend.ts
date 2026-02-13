@@ -9,7 +9,7 @@ import { applySafetyFilter, SafetyFilterResult } from './safety';
 import { resolveConflicts } from './conflicts';
 import { applyContextBranch } from './context';
 import { INGREDIENTS } from '@/src/data/ingredients';
-import { MUSIC_TRACKS } from '@/src/data/music';
+import { MUSIC_TRACKS, AMBIENCE_TRACKS } from '@/src/data/music';
 import { PERSONA_COLORS } from '@/src/data/colors';
 
 /**
@@ -98,7 +98,13 @@ export function generateRecommendation(
       t.persona.includes(resolved.primaryPersona.code)
     ) ?? MUSIC_TRACKS[0];
 
-  // Step 10: Build final recommendation
+  // Step 10: Select ambience track
+  const ambience =
+    AMBIENCE_TRACKS.find((t) =>
+      t.persona.includes(resolved.primaryPersona.code)
+    ) ?? AMBIENCE_TRACKS[0];
+
+  // Step 11: Build final recommendation
   return {
     id: `rec_${Date.now()}`,
     persona: resolved.primaryPersona.code,
@@ -107,6 +113,7 @@ export function generateRecommendation(
     durationMinutes: context.durationMinutes,
     ingredients,
     music,
+    ambience,
     lighting: resolved.primaryPersona.lighting,
     safetyWarnings: safety.warnings,
     colorHex: PERSONA_COLORS[resolved.primaryPersona.code],

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  Pressable,
+  TouchableOpacity,
   StyleSheet,
   ScrollView,
   Alert,
@@ -94,10 +94,10 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>설정</Text>
 
-        <Pressable style={styles.actionCard} onPress={handleResetOnboarding}>
+        <TouchableOpacity style={styles.actionCard} onPress={handleResetOnboarding} activeOpacity={0.7}>
           <Text style={styles.actionText}>프로필 다시 설정하기</Text>
           <Text style={styles.actionArrow}>→</Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>

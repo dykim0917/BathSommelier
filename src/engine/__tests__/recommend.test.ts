@@ -137,6 +137,23 @@ describe('Full Recommendation Pipeline', () => {
     expect(result.music.id).toBeTruthy();
   });
 
+  test('recommendation has ambience track', () => {
+    const profile = makeProfile();
+    const result = generateRecommendation(profile, ['stress']);
+
+    expect(result.ambience).toBeTruthy();
+    expect(result.ambience.id).toBeTruthy();
+    expect(result.ambience.filename).toBeTruthy();
+  });
+
+  test('ambience track matches persona', () => {
+    const profile = makeProfile();
+    // muscle_pain triggers P3_MUSCLE
+    const result = generateRecommendation(profile, ['muscle_pain']);
+
+    expect(result.ambience.persona).toContain(result.persona);
+  });
+
   test('recommendation has lighting suggestion', () => {
     const profile = makeProfile();
     const result = generateRecommendation(profile, ['muscle_pain']);
