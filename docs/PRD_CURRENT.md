@@ -1,0 +1,976 @@
+# PRD — Bath Sommelier v3.9.1 (Target UX + Personalization/Commerce/Legal + Home Orchestration)
+
+버전: v3.9.1 (Target UX Spec)  
+기준일: 2026-02-13  
+문서 목적: 목표형 제품 요구사항 + 개인화 학습 + 커머스 검증 + 법적 완충 구조를 통합 정의하며, 제품을 Digital Balneotherapy Platform 포지셔닝으로 확장하고 Home 오케스트레이션 레이어를 중심으로 Care/Trip 엔진 및 ProductHub 구조를 정밀화한다(의료적 진단/치료 주장 금지).
+
+## 1. 제품 핵심가치
+BathSommelier의 핵심은 다음 한 문장으로 정의한다.
+
+**"내 상태를 이해하고 맞춤형 목욕을 설계해준다."**
+
+모든 입력, 추천, 실행, 피드백, 리텐션, 커머스 기능은 이 원칙을 기준으로 설계한다.
+
+## 2. 제품 목표
+- 사용자 상태를 짧은 입력으로 파악하고 맞춤 루틴을 제시한다.
+- 추천 결과에 "왜 이 추천인지"를 설명해 납득도를 높인다.
+- 추천을 단순 제안이 아닌 단계형 실행 루틴으로 연결한다.
+- 개인화 엔진으로 사용할수록 정확도가 올라가도록 설계한다.
+- 안전성과 신뢰성을 문구/정보 구조로 일관되게 보장한다.
+- 커머스 전환 구조를 KPI 기반으로 검증한다.
+
+## 3. 대상 사용자
+- 스트레스/긴장/피로 완화를 원하는 사용자
+- 수면 준비 루틴이 필요한 사용자
+- 감정 환기/기분 전환/리셋을 원하는 사용자
+- 욕조 없이 샤워/족욕 중심으로 웰니스 루틴을 쓰는 사용자
+
+## 4. Information Architecture (v3.9.1)
+Home = Unified Orchestration Layer  
+CareEngine = Physiological Engine  
+TripEngine = Immersion Engine  
+ProductHub = Curated Bath Shop
+
+핵심 원칙:
+- Home은 Care/Trip의 분기점이 아니다.
+- Home은 두 엔진의 결과를 통합해 사용자에게 단순화된 의사결정안을 제시한다.
+- Home does not decide engines. Home displays the result of EngineSelector.
+- Engines are implementation layers, Home is the user-facing decision layer.
+- Home is a decision simplification layer, not a category navigation layer.
+
+구조 다이어그램:
+```txt
+User
+↓
+Home (Orchestration Layer)
+↓
+EngineSelector (internal policy layer)
+↓
+CareEngine | TripEngine
+↓
+ProductHub (supporting commerce)
+```
+
+사용자 흐름:
+1. 온보딩(경량): 2~3문항으로 시작
+2. Home 오케스트레이션:
+   - Today Signal
+   - Primary Suggestion (1)
+   - Secondary Suggestions (<=2)
+   - Quick Actions
+   - Insight Strip
+3. 추천 결과:
+   - Why 설명 + 루틴 파라미터 + 대안 루틴
+   - 즉시 시작 버튼
+4. 루틴 실행:
+   - 준비 → 입욕/샤워 → 마무리 (단계형)
+5. 완료:
+   - 전/후 기분 체크
+   - 개인화 학습 피드백
+6. 리텐션:
+   - 주간 리포트(효과적 조합 TOP3)
+7. 설정:
+   - 근거 및 참고 + 법적 고지
+
+## 5. Care 모드 상태 분류 체계
+
+### 5.1 1차 분류 (Physiological Axis)
+1. 자율신경 균형 축
+- 긴장 과다 (교감신경 우위)
+- 무기력/저각성 (부교감 우위)
+- 수면 준비 필요
+
+2. 순환/체온 축
+- 냉감/수족냉증 경향
+- 부종/순환 정체
+- 근육 피로
+
+3. 피부/외부 자극 축
+- 민감성 피부
+- 건조/보습 필요
+- 피로 피부
+
+### 5.2 2차 분류 (Emotional Axis)
+- 스트레스 해소
+- 감정 환기
+- 기분 전환
+- 몰입/리셋
+
+## 6. Care Intake Schema
+
+### STEP 1. 오늘 상태 선택
+- 긴장되어 있다
+- 몸이 무겁다
+- 잠이 안 온다
+- 기분이 가라앉았다
+- 단순히 리셋하고 싶다
+
+### STEP 1 보조 입력 (초기 2~3문항)
+- 오늘의 스트레스 지수
+- 최근 수면 시간
+- 체온감
+- 운동 여부
+- 생리 주기(해당 시)
+
+### STEP 2. 안전 조건 확인
+- 기존 건강 상태/주의 조건 확인
+- 안전 필터 자동 적용
+- 신규 리스크군 체크:
+  - 당뇨(말초 감각 저하 가능성)
+  - 기립성 저혈압
+  - 낙상 위험군
+
+### STEP 2-1. 부분 입욕 세부 권장 규칙
+- 족욕 우선 권장:
+  - 초고령자
+  - 심부전 환자
+  - 매우 허약한 상태
+  - 기립성 저혈압
+  - 낙상 위험군
+- 저위 입욕(Low-leg) 우선 권장:
+  - 경계성 고혈압
+  - 냉증
+  - 하체 부종
+  - 근육 피로
+  - 장시간 좌식 근무자
+
+### PRD 데이터 계약 확장 (Interface / Type)
+- `BathEnvironment`:
+  - 상위 입력: `bathtub | shower | partial_bath`
+  - 하위 입력(`partial_bath_subtype`): `low_leg | footbath`
+  - 마이그레이션 원칙: 기존 `footbath` 직접값은 `partial_bath + footbath`로 정규화
+- `SafetyProfile`:
+  - `diabetes_flag`
+  - `orthostatic_hypotension_flag`
+  - `fall_risk_flag`
+  - `cold_shower_contraindication_flag` (고혈압 미조절/뇌혈관 질환 병력/부정맥)
+
+## 7. Recommendation Explanation Contract
+추천 결과 카드에는 아래 항목이 필수다.
+
+- `state_label`: 예) 긴장형 피로
+- `why_summary`: 2~3줄 근거 설명
+- `routine_params`: 온도/시간/향 프로파일
+- `expected_goal`: 정량 수치 제외, 목표형 문구
+- `alternative_routine`: 대안 1개
+
+### 소믈리에 페르소나 문구 템플릿
+- "오늘 당신은 긴장형 피로 상태입니다."
+- "심신 이완을 위해 라벤더 + 우디 계열 루틴을 추천합니다."
+- "38~40°C, 15분 중심 루틴이 적합합니다."
+
+## 8. Routine Execution Contract
+- 단계 고정: `준비 → 입욕/샤워 → 마무리`
+- 단계 전환: "다음" 단일 액션 우선
+- 결과 화면에서 즉시 루틴 시작 진입 가능해야 함
+
+## 9. 온보딩 전략
+- 첫 진입은 경량 온보딩(2~3문항)만 수행
+- 추가 프로파일은 루틴 완료 후 점진 수집
+- 사용자에게 "정확도 향상" 맥락으로 안내
+
+## 10. 리텐션 루프
+- 루틴 완료 후 전/후 기분 체크
+- "당신에게 맞는 조합을 학습 중" 피드백 제공
+- 주간 리포트 제공:
+  - 수면/스트레스 완화에 잘 맞은 조합 TOP3
+  - 개인별 선호 향/온도/시간 경향
+
+## 11. Commerce Recommendation Contract
+
+### 11.1 추천 구조
+- 상태 판별 → 루틴 조건 도출 → 제품 3개 제시
+- 제품 추천 원칙: 인기/디자인 우선이 아니라 프로토콜 적합도 우선
+- Environment Compatibility Rule (추천 전 선필터 필수):
+  - bathtub/partial: `powder | salt | milk | oil`
+  - shower: `steamer | bodywash | mist | tablet (if applicable)`
+- 상태가 Recovery 또는 Sleep이면 중성 중탄산 계열 제품 우선 노출
+- 모드별 상세 프로토콜은 Section 23을 참조해 커머스 추천 근거에 반영
+- 제품 매칭/스코어링/슬롯 규칙은 Section 24를 단일 소스로 참조
+- Trip 커머스는 Section 25의 `TripCommerceBundle` 규칙을 우선 적용
+- 경계 원칙: `TripCommerceBundle`은 Section 24 기전 스코어 공식을 사용하지 않음
+- Care/Trip 공통 규칙: 환경 호환 필터를 먼저 통과한 후보만 다음 단계(안전/스코어링)로 전달
+- Home/EngineSelector는 표시/선정 레이어이며, Section 24/25 엔진 출력 결과를 사용자에게 단순화해 노출
+
+### 11.2 제품 수 및 구성 규칙
+- 최대 3개
+- 가격대 다양화: 저가/중가/고가 각 1개
+- `Sommelier Pick` 배지 1개만 허용
+- 슬롯 역할 고정:
+  - 1) 기전 기반 대표 제품
+  - 2) 향 기반 감성 제품
+  - 3) 가성비 대안
+
+### 11.3 CTA 및 상세 정보
+- CTA 문구: **"이 루틴으로 시작하기"**
+- 제휴 링크 노출보다 설득 정보 우선
+- 상세 정보 필수 항목:
+  - 향 프로파일
+  - 사용감
+  - 어울리는 사람 유형
+  - 이런 날에 추천
+  - 루틴 적합성 근거(상태/온도/시간/향 매핑 기반)
+- Mechanism Highlight Box 노출 규칙:
+  - 제품 카드: 1줄 요약(기전/적합 루틴)
+  - 제품 상세: 확장 설명(안전/금기 포함)
+- Trip CTA 규칙:
+  - Care: "이 루틴으로 시작하기"
+  - Trip: 테마형 CTA (예: "교토의 숲을 준비하기")
+
+## 12. Safety & Evidence Structure
+
+### 12.1 레시피 화면 하단 고정 안전 가이드
+⚠ 안전 가이드
+- 38~40°C 권장 (개인 차 있음)
+- 10~15분 권장
+- 수면 루틴은 38~41°C 범위에서만 제안
+- 수면 루틴은 취침 1~2시간 전 권장
+- 수면 루틴은 15분 초과 시 경고
+- 어지러움/심박 이상 시 즉시 중단
+- 음주 직후 사용 금지
+- 임신 초기 사용 전 전문가 상담 권장
+- 냉수 샤워 금기:
+  - 조절되지 않는 고혈압
+  - 뇌혈관 질환 병력
+  - 부정맥
+  - 기립성 저혈압
+- 고위험군 정책: 즉시 중단 + 대체 루틴(반신/저위/족욕) 자동 제안
+- 기전 강조 안내 원칙: Safety Block 하단 기전 설명 시에도 의료 효능 단정 문구 금지
+
+### 12.2 근거 기반 배지
+레시피 카드 하단에 문구형 배지 노출
+- 기본 문구: `Physiological relaxation–based recommendation`
+- 대체 문구: `Based on thermal & aromatherapeutic studies`
+- 논문 수치 직접 인용 금지
+
+### 12.3 설정 > 근거 및 참고 메뉴
+필수 메뉴 항목:
+- 입욕 온도 가이드라인
+- 자율신경 설명
+- 아로마 안전 주의
+- 광독성 오일 안내
+- 임신 주의 오일 리스트
+
+## 13. Copy Safety Policy (강제)
+
+### 13.1 금지 표현
+- 치료합니다
+- 면역력 증가합니다
+- 노폐물 배출합니다
+- 질환 개선합니다
+- 호르몬 조절합니다
+- 혈류 n배 증가
+- 치료 효과 보장
+
+### 13.2 권장 표현
+- ~에 도움을 줄 수 있습니다
+- ~을 지원합니다
+- ~을 유도하는 환경을 만듭니다
+- ~에 적합한 루틴입니다
+- ~을 완화하는 데 초점을 둡니다
+- 기전 안내 템플릿: "이 제품은 [기전] 기반으로 [루틴 목적]을 돕는 데 적합합니다."
+
+### 13.4 Trip Copy Firewall
+- Trip 금지 어휘:
+  - 혈류
+  - 자율신경
+  - 치료/개선 수치 단정
+- Trip 허용 어휘:
+  - 공간
+  - 분위기
+  - 몰입
+  - 전환
+  - 여정
+  - 잔광
+  - 파동
+  - 숨결
+  - 온기
+  - 차분함
+  - 리듬
+- 주의 어휘:
+  - "회복"은 Trip 문맥에서 Care 오해를 유발할 수 있으므로 narrative 맥락으로 제한 사용
+
+### 13.3 문구 변환 예시
+- 기존: "지방에 쌓인 노폐물 제거"
+- 변경: "순환을 촉진하는 환경을 조성하여 상쾌함을 돕습니다"
+
+- 기존: "면역력 강화"
+- 변경: "따뜻한 환경은 신체 이완과 회복에 도움을 줄 수 있습니다"
+
+- 기존: "수면 개선"
+- 변경: "수면 준비 상태를 만드는 데 도움을 줄 수 있습니다"
+
+## 14. 기존 기능 범위 유지 항목
+- Trip 테마 선택 구조
+- 환경 토글 및 마지막 선택 저장
+- 타이머 몰입 화면(욕조/샤워 분기)
+- 완료 피드백 저장
+- 히스토리 조회 및 기본 호환 로직
+
+## 15. 비기능 요구사항
+- 의료적 진단/치료 주장으로 해석될 표현 금지
+- 모바일 우선 UX (결정 피로/과잉 입력 최소화)
+- 기능 안전성 및 회귀 안정성 유지
+- 웹 배포 가능 구조 유지 (Vercel + 정적 export)
+
+## 16. 배포/운영
+- Web 배포 타깃: Vercel
+- 출력 디렉터리: `dist`
+- Node 권장 버전: 20 (`.nvmrc`)
+- 빌드 명령: `npm run export:web`
+
+## 17. 문서 품질 검증 체크리스트
+
+### 구조 검증
+- Care 입력이 STEP 1/STEP 2로 명확히 정의되었는가
+- 생리학/정서 분류 축 누락이 없는가
+
+### UX 검증
+- Why/목표/대안 루틴 필수 항목이 포함되었는가
+- 단계형 실행/점진 온보딩/리텐션 루프가 반영되었는가
+
+### 커머스 검증
+- 제품 3개 제한, 가격대 다양화, 단일 Pick 규칙이 명시되었는가
+- CTA/상세 정보 구조가 문서화되었는가
+
+### 안전/표현 검증
+- 금지 표현이 본문에 남아있지 않은가
+- 정량 효과 약속 문구가 제거되었는가
+- 안전 가이드/근거 메뉴 항목이 포함되었는가
+
+## 18. Personalization Engine Spec
+
+### 18.1 Engine 3-Layer Architecture
+
+1) Input Layer (단기 신호)
+- 1차 상태 선택
+- 스트레스 지수
+- 수면 시간
+- 체온감
+- 운동 여부
+- 생리 주기
+- 환경 선택(욕조/샤워/부분 입욕)
+- 부분 입욕 세부 선택(저위 입욕/족욕)
+
+2) Behavior Layer (행동 데이터)
+- 추천 클릭 여부
+- 루틴 시작 여부
+- 루틴 완료율
+- 중도 이탈 시점
+- 전/후 기분 변화 점수
+- 재방문 간격
+- 테마별 사용 빈도
+- 환경별 완료율
+
+3) Preference Layer (누적 학습 값)
+
+`UserPreference` 스키마:
+- `preferred_temp_range`
+- `preferred_duration_range`
+- `top_scent_family`
+- `completion_rate_by_environment`
+- `stress_response_score`
+- `sleep_response_score`
+- `sensitivity_flag`
+
+### 18.2 개인화 적용 흐름
+1. 상태 입력 기반 기본 추천 생성
+2. 개인 누적 데이터 가중치 적용
+3. 안전 필터 최종 적용
+
+### 18.3 Personalization Ramp 정책 (고정)
+- 1~5회: 기본 알고리즘 100%
+- 6~9회: 개인 가중치 20%
+- 10회+: 개인 가중치 40%
+
+## 19. Commerce KPI & Validation Plan
+
+### 19.1 필수 이벤트 로깅
+- `recommendation_card_click`
+- `product_detail_view`
+- `affiliate_link_click`
+- `sommelier_pick_click`
+- `revisit_within_7d`
+- `bicarbonate_product_click` (권장)
+- `bicarbonate_click_rate` (지표 이벤트 집계용)
+- `bicarbonate_conversion_rate` (지표 이벤트 집계용)
+- `sleep_mode_bicarbonate_click_share` (지표 이벤트 집계용)
+- `mode_protocol_applied` (권장)
+- `mode_protocol_overridden_by_safety` (권장)
+- `contrast_protocol_started` (권장)
+- `cold_phase_completed_30s` (권장)
+- `trip_theme_selected` (권장)
+- `trip_immersion_started` (권장)
+- `trip_variant_used_lite_or_deep` (권장)
+- `trip_narrative_engaged` (권장)
+- `trip_bundle_click` (권장)
+
+### 19.2 단계형 KPI
+
+MVP 기준:
+- 추천 카드 클릭률 ≥ 15%
+- 제품 상세 진입률 ≥ 7%
+- 제휴 링크 클릭률 ≥ 3%
+- 제휴 클릭 후 7일 내 재방문률 ≥ 25%
+
+Scale 기준:
+- 추천 카드 클릭률 ≥ 18%
+- 상세→제휴 이동률 ≥ 5%
+- Sommelier Pick 클릭 점유율 ≥ 40%
+- 중탄산 우선 노출군 클릭 점유율 개선
+- Sleep 모드 bicarbonate 클릭 점유율 ≥ 45% (목표)
+- `trip_session_completion_rate` 개선
+- `trip_avg_session_duration` 개선
+- `trip_return_after_trip_session` 개선
+
+### 19.3 실험 설계 (A/B)
+실험 A:
+- A안: 제품 3개 + Sommelier Pick 강조
+- B안: 제품 1개 + 깊은 설명
+
+실험 B:
+- A안 CTA: "이 루틴으로 시작하기"
+- B안 CTA: "추천 제품 보기"
+
+성공 판단:
+- 클릭률, 상세 진입률, 제휴 이동률, 7일 내 재방문률 개선
+- Sommelier Pick 클릭 점유율 및 중탄산 우선 노출군 클릭 점유율 개선
+- 모드별(Sleep/Reset/Recovery) 클릭/완료/7일 재방문률 개선
+- 모드별 퍼널(추천 노출→카드 클릭→상세 진입→제휴 이동→7일 재방문) 개선
+- Care/Trip 세션 분리 리포팅으로 Trip 퍼널 개선 확인
+
+## 20. Sommelier AI
+
+### 20.1 알고리즘 구조
+1. 상태 → 생리학 매핑
+2. 생리학 → 루틴 파라미터 매핑
+3. 개인 가중치 적용
+4. 안전 필터 최우선 적용 (`safety_precedence = absolute`)
+5. 고위험군 냉수 차단 (`cold_shower_disabled_when_high_risk = true`)
+6. 모드별 프로토콜은 Section 23을 단일 소스로 참조
+7. 엔진 분리 원칙:
+   - CareEngine: 생리학/안전 프로토콜 담당
+   - TripEngine: narrative/visual/audio 연출 담당
+8. 충돌 해결 원칙:
+   - `if user_has_active_state: apply_care_protocol(); apply_trip_immersion_overlay();`
+
+### 20.2 상태 매핑 예시
+- 긴장 과다 → 교감신경 우위
+- 목표: 부교감 활성
+- 전략: 38~39°C + 10~15분 + 플로럴/우디
+- 수면 준비 필요 → 수면 준비 상태 유도
+- 수면 전략: 38~41°C + 10~15분 + 취침 1~2시간 전 루틴 (상세: 23.1)
+- 리셋 필요 → 각성 전환/멘탈 리셋 전략 (상세: 23.2)
+- 회복 필요 → 혈류/근육 회복 지원 전략 (상세: 23.3)
+
+### 20.3 개인 가중치 보정 예시
+- 39°C 완료율이 높고 40°C 이탈률이 높다면 38~39°C로 자동 보정
+- 우디 계열 완료율이 높다면 향 가중치를 우디 중심으로 보정
+
+### 20.4 안전 필터 우선순위 (최상위)
+- 고혈압: 최대 온도 38°C
+- 임신: 주의 오일 제외
+- 당뇨: 온도 감각 저하 리스크 반영(보수적 온도/시간 제한)
+- 기립성 저혈압: 급격한 온도 변화 및 기립 전환 경고
+- 낙상 위험군: 족욕 우선, 이동/기립 단계 경고 강화
+- 냉수 샤워 금기군(조절되지 않는 고혈압/뇌혈관 질환 병력/부정맥/기립성 저혈압): 냉수 루틴 차단
+- 기타 안전 필터는 추천/개인화보다 우선
+
+### 20.5 설명 문구 계약 (AI 체감 요소)
+예시:
+- "최근 3회 루틴 중 39°C에서 완료율이 가장 높았습니다. 오늘도 비슷한 온도로 제안드립니다."
+
+### 20.6 Lighting & Bath Depth Rules
+- Sleep Mode:
+  - 조명: Warm Amber 또는 Soft Red
+  - Blue tone 금지
+- Morning Mode:
+  - 조명: Cyan 또는 Cool White 허용
+- Bath depth profile:
+  - `full | half | low_leg | footbath`
+- Product priority rule:
+  - `bicarbonate_priority_for_sleep_or_recovery`
+- 모드 타입 계약(`ModeType`):
+  - `sleep | reset | recovery`
+  - CareEngine에서 독립적으로 계산
+- EngineSelector (internal policy layer) 계약:
+  - `active_state`
+  - `time_context`
+  - `environment_context`
+  - `priority_resolution`
+- 모드 프로토콜 계약(`ModeProtocol`):
+  - `temp_range`
+  - `duration_range`
+  - `timing_window`
+  - `lighting_profile`
+  - `scent_profile`
+  - `audio_profile`
+  - `contraindications`
+  - `hard_limits`
+  - `fallback_strategy`
+
+## 21. Legal Disclaimer Layer
+
+### 21.1 고정 문구 (확정)
+**"BathSommelier는 의료 진단 또는 치료 서비스를 제공하지 않습니다. 개인 건강 상태에 따라 전문의 상담을 권장합니다."**
+
+### 21.2 노출 위치
+- 설정 화면 고정 영역
+- 레시피 화면 하단 고정 블록
+- 상황성 경고 영역: 냉수 샤워 금기군 감지 시 별도 경고 배너 병기
+
+### 21.3 노출 정책
+- 항상 노출(조건부 숨김 없음)
+- 문구 축약/완곡 표현 금지 (법적 완충 목적 유지)
+- Mechanism Highlight 문구도 동일 정책 적용(의료 단정/치료 암시 금지)
+
+## 22. 문서 추가 검증 체크리스트
+
+### Personalization 검증
+- Input/Behavior/Preference 3계층 분리 정의 여부
+- `UserPreference` 필드 누락 여부
+- 1~5/6~9/10+ 램프업 수치 고정 여부
+
+### Commerce 검증
+- MVP/Scale 단계형 KPI 반영 여부
+- 퍼널(추천→상세→제휴→재방문) 정의 여부
+- A/B 실험 가설/비교군/성공지표 포함 여부
+
+### Sommelier AI 검증
+- 상태→생리학→파라미터→개인보정 논리 연결 여부
+- 안전 필터 최우선 원칙 명시 여부
+- 카피 정책 위반 문구 존재 여부
+- Sleep 조명 Blue 금지 및 Morning 쿨톤 허용 규칙 누락 여부
+
+### Legal 검증
+- 법적 고지 문안 정확성
+- 설정+레시피 이중 배치 명시 여부
+- 냉수 샤워 금기군 경고 문구 병기 여부
+
+### IA/안전 확장 검증
+- 환경 IA가 상위 3개 + 부분 입욕 하위 2개 구조로 명시되었는가
+- 기본 안전가이드(38~40)와 수면 예외(38~41, 취침 1~2시간 전)가 충돌 없이 공존하는가
+- 신규 리스크군(당뇨/기립성 저혈압/낙상) 필터가 누락되지 않았는가
+- Recovery/Sleep 중탄산 우선 노출 규칙과 KPI/이벤트 연결이 명시되었는가
+
+### 3모드 알고리즘 검증
+- Sleep 프로토콜(38~41°C, 10~15분, 취침 1~2시간 전)과 하드리밋(41°C/15분 경고)이 분리 명시되었는가
+- Reset 프로토콜(냉온 교대/단일 냉수)과 초보자 30초 기준이 명시되었는가
+- Reset 절대 금기군 차단 규칙이 명시되었는가
+- Recovery 기본(40~42°C)과 고위험군 오버라이드(<=40°C, half/low-leg)가 함께 명시되었는가
+- 안전 필터 절대우선 원칙이 3모드 전체에 적용되는가
+
+### 제품 매칭 검증
+- ProductProfile 필드가 타입/설명과 함께 완전 정의되었는가
+- `environment_fit` 필드가 누락/오기 없이 정의되었는가
+- `primary_mode_fit`의 `hygiene`가 확장 예약값으로 명시되었는가
+- 3슬롯(기전/감성/가성비) 구성 규칙이 강제 조건으로 명시되었는가
+- 스코어 상수(0.4/0.3/0.2/0.1)가 정확한가
+- bicarbonate KPI/이벤트가 누락 없이 명시되었는가
+- Mechanism Highlight 문구가 의료 단정 금지 정책을 준수하는가
+- 환경 필터가 스코어링 전에 선적용되는가
+- shower 선택 시 salt/oil 등 비호환 후보가 제외되는가
+
+### Trip 엔진 검증
+- Trip이 Care 서브모드가 아닌 독립 엔진으로 명시되었는가
+- Default vs Override 정책이 함께 명시되었는가
+- `active_state` 시 Care 프로토콜 우선 + Trip 연출 오버레이 정책이 명시되었는가
+- Trip 커머스가 Section 24 스코어링과 분리되었는가
+- Trip 금지/허용 어휘 가드가 누락 없이 명시되었는가
+- Memory Contract(`completion_snapshot`, `theme_preference_weight`, `narrative_recall_card`)가 정의되었는가
+
+### Home 오케스트레이션 검증
+- Home이 엔진 결정자가 아니라 결과 표시/단순화 레이어로 명시되었는가
+- EngineSelector 4필드(`active_state`, `time_context`, `environment_context`, `priority_resolution`)가 정의되었는가
+- `fallback_strategy` 및 3개 이상 fallback 시나리오가 명시되었는가
+- 사용자에게 Care/Trip 강제 선택 금지 문구가 포함되었는가
+- ProductHub가 supporting commerce layer로 명시되었는가
+
+## 23. Mode-Specific Algorithm Definition
+
+### 23.1 Sleep Mode — 체온 하강 유도 알고리즘
+목표 생리 상태:
+- 심부 체온 하강 유도
+- 부교감신경 활성
+- 멜라토닌 분비 보호
+
+자율신경 목표:
+- 교감신경 활성 하향
+- 부교감신경 활성 상향
+- 심박수 안정
+- 말초 혈관 확장
+
+프로토콜:
+- 온도: `38~41°C` (상한 41°C 고정)
+- 시간: `10~15분`
+- 타이밍: 취침 `1~2시간 전`
+
+하드리밋:
+- `41°C 초과 금지`
+- `15분 초과 시 경고`
+
+감각 요소:
+- 향: 라벤더, 샌달우드, 베르가못 (플로럴/우디 축)
+- 조명: 앰버/레드 (블루톤 금지)
+- 음악: BPM 60~80, 앰비언트/저자극 클래식
+
+금기 및 대체:
+- 임신 초기: 고온 금지
+- 심혈관 질환: 전신욕 회피, 반신/저위 입욕 우선
+- 음주 직후: 루틴 금지
+
+의사코드:
+```txt
+if ModeType == "sleep":
+  temp = 38..41
+  duration = 10..15
+  lighting = amber_or_red
+  scent = floral_or_woody
+  enforce_warning_if_over(41C or 15min)
+  apply_safety_filter_first()
+```
+- 제품 매칭 규칙: Section 24 정책 적용
+
+### 23.2 Reset Mode — 각성 스위칭 알고리즘
+목표 생리 상태:
+- 각성 전환
+- 멘탈 리셋
+- 교감신경 순간 활성
+
+프로토콜:
+- 옵션 A(냉온 교대 샤워):
+  - Warm `40°C` `3~5분`
+  - Cold `<=20°C` `30~60초` (초보자 `30초` 고정)
+- 옵션 B(단일 냉수):
+  - Cold `30~60초`
+
+감각 요소:
+- 향: 페퍼민트, 레몬, 유칼립투스
+- 조명: 시안/쿨 화이트 (블루 허용)
+- 음악: BPM `100+`, 리듬 중심
+
+절대 금기:
+- 조절되지 않는 고혈압
+- 부정맥
+- 뇌혈관 질환
+- 기립성 저혈압
+
+안전게이트:
+- 고위험군은 냉수 단계 비활성화
+- 대체 루틴: 온수 단일 루틴 또는 반신/저위 입욕
+
+의사코드:
+```txt
+if ModeType == "reset":
+  if high_risk:
+    disable_cold_shower()
+    fallback_to_safe_warm_protocol()
+  else:
+    apply_contrast_or_cold_protocol()
+  apply_safety_filter_first()
+```
+- 제품 매칭 규칙: Section 24 정책 적용
+
+### 23.3 Recovery Mode — 혈류/회복 중심 알고리즘
+목표 생리 상태:
+- 말초 혈류 증가 환경 조성
+- 근육 이완
+- 회복 지원
+
+기본 프로토콜(건강 성인):
+- 온도: `40~42°C`
+- 시간: `10~15분`
+- 형태: 반신욕 우선
+
+안전 오버라이드:
+- 고위험군(심혈관/고혈압/저혈압/낙상 위험)은
+  - 형태: `half_or_low_leg`
+  - 온도: `<=40°C`
+
+감각 요소:
+- 향: 로즈마리, 마조람, 블랙페퍼
+- 조명: 뉴트럴 그린, 소프트 화이트
+- 제품 우선: 엡섬솔트(Mg), 중성 중탄산
+
+의사코드:
+```txt
+if ModeType == "recovery":
+  if cardiovascular_or_high_risk:
+    mode = half_or_low_leg
+    temp = <=40
+  else:
+    mode = half_bath
+    temp = 40..42
+  duration = 10..15
+  prioritize_bicarbonate_or_epsom()
+  apply_safety_filter_first()
+```
+- 제품 매칭 규칙: Section 24 정책 적용
+
+### 23.4 모드 비교 요약
+| 모드 | 목표 자율신경/생리 | 온도 | 시간 | 조명 | 향 | 핵심 금기 |
+|---|---|---|---|---|---|---|
+| Sleep | 부교감 활성/체온 하강 유도 | 38~41°C | 10~15분 | 앰버/레드 | 라벤더/샌달우드/베르가못 | 임신 초기 고온, 음주 직후 |
+| Reset | 각성 전환/멘탈 리셋 | 냉온 교대 또는 냉수 | 30~60초(냉수 단계) | 시안/쿨 화이트 | 페퍼민트/레몬/유칼립투스 | 고혈압 미조절/부정맥/뇌혈관/기립성 저혈압 |
+| Recovery | 회복/근육 이완 지원 | 40~42°C(고위험군 <=40°C) | 10~15분 | 뉴트럴 그린/소프트 화이트 | 로즈마리/마조람/블랙페퍼 | 고위험군 전신 고온 노출 제한 |
+
+### 23.5 공통 후처리 규칙
+- 모든 모드는 `apply_safety_filter_first()`를 공통 후처리로 적용
+- 안전 필터 발동 시:
+  - 온도/시간/환경 강제 하향
+  - 금기 조건 루틴은 차단
+  - 사용자에게 대체 루틴 제안
+
+## 24. Product Matching & Bicarbonate Strategy
+
+### 24.1 ProductProfile 데이터 계약
+```txt
+ProductProfile {
+  category: powder | tablet | salt | oil | milk
+  core_mechanism: bicarbonate | magnesium | aromatic | moisturizing | detox
+  primary_mode_fit: sleep | recovery | reset | hygiene
+  environment_fit: bathtub | shower | both
+  temp_optimal_range
+  duration_optimal_range
+  contraindications
+  risk_level
+  price_tier
+}
+```
+
+보조 계약:
+```txt
+ProductRecommendationPolicy {
+  mode_to_mechanism_mapping
+  scoring_formula
+  slot_composition_rule
+  copy_safety_rule
+}
+```
+
+정책:
+- `hygiene`는 확장 예약값이며, 현재 추천 계산의 활성 모드는 `sleep | reset | recovery`로 제한
+- `partial_bath`는 기본적으로 `bathtub` 호환군으로 처리
+
+### 24.2-1 Environment Compatibility Rule
+- 추천 전 환경 필터를 1차 게이트로 적용
+- 환경별 허용 카테고리:
+  - bathtub/partial: `powder | salt | milk | oil`
+  - shower: `steamer | bodywash | mist | tablet (if applicable)`
+
+### 24.2 모드별 성분 매핑
+- Sleep:
+  - 우선: `bicarbonate`
+  - 보조: `magnesium`
+  - 회피: 자극향(예: peppermint) 과다 제품
+- Recovery:
+  - 우선: `magnesium`
+  - 보조: `bicarbonate`
+  - 허용: warming aroma(예: rosemary)
+- Reset:
+  - 우선: 발포형(`tablet`) + 자극향
+  - 회피: sleep-optimized bicarbonate 타입
+
+### 24.3 스코어링 공식 및 tie-break
+파이프라인 순서(고정):
+1. `env_candidates = filter_by_environment(products, selected_environment)`
+2. `safe_candidates = apply_safety_filter_first(env_candidates)`
+3. `scored = score_products(safe_candidates, mode, user_preference, fixed_weights)`
+
+고정 공식(MVP):
+```txt
+score =
+  (mode_fit_weight * 0.4)
++ (core_mechanism_match * 0.3)
++ (user_preference_weight * 0.2)
++ (price_tier_diversity * 0.1)
+```
+
+Tie-break 규칙:
+1. 안전 리스크 낮은 제품 우선
+2. 모드 핵심 기전 일치 제품 우선
+3. 동일 시 가격대 다양성 유지 우선
+
+### 24.4 3제품 슬롯 구성 알고리즘
+- 슬롯 A: 기전 기반 대표 제품
+- 슬롯 B: 향 기반 감성 제품
+- 슬롯 C: 가성비 대안
+- 공통 제약:
+  - 저가/중가/고가 분산 유지
+  - 중복 기전 과다 노출 방지
+  - 금기/고위험 제품 제외
+
+### 24.5 예시 의사코드
+```txt
+env_candidates = filter_by_environment(products, selected_environment)
+candidates = filter_by_contraindications(env_candidates, user_safety_profile)
+safe_candidates = apply_safety_filter_first(candidates)
+scored = score_products(safe_candidates, mode, user_preference, fixed_weights)
+slots = compose_three_slots(scored, [mechanism, sensory, value])
+return diversify_price_tiers(slots)
+```
+
+## 25. Trip Immersion Engine
+
+### 25.1 엔진 선언
+- Trip은 Care의 서브모드가 아니라 독립 엔진(`TripEngine`)이다.
+- 역할 분리:
+  - CareEngine: 생리학/안전 프로토콜
+  - TripEngine: 분위기/공간/감성/몰입 연출
+- 동시 맥락 충돌 시 우선순위:
+  - `if user_has_active_state: Care protocol 우선 적용`
+  - `Trip은 rendering overlay로만 적용`
+
+### 25.2 ThemeProfile 데이터 계약
+```txt
+ThemeProfile {
+  narrative_description
+  ambient_sound_layer
+  lighting_profile
+  scent_profile
+  temperature_mood
+  water_behavior_style
+  visual_motion_style
+}
+```
+
+### 25.3 TripImmersionStrategy 데이터 계약
+```txt
+TripImmersionStrategy {
+  immersion_depth: shallow | deep
+  audio_strategy
+  visual_strategy
+  interaction_density
+  time_expectation
+}
+```
+
+### 25.4 TripEnvironmentPolicy (Default + Override)
+기본 정책(Default):
+- `shower -> shallow`
+- `bathtub/partial -> deep`
+
+오버라이드 정책:
+- `override_allowed = true`
+- 예외 입력 허용:
+  - 입욕 5분의 짧은 루틴
+  - 샤워에서 깊은 ASMR 몰입
+  - 부분 입욕 3분 리듬 루틴
+
+### 25.5 Trip Lite / Trip Deep
+- Trip Lite(기본: 샤워):
+  - 3~7분
+  - Warm-up → Peak → Reset
+  - 모션 최소화, 리듬 전환 중심
+- Trip Deep(기본: 입욕/부분 입욕):
+  - 10~20분
+  - 서사 기반 진행
+  - 감각 레이어 확장(사운드/빛/파동)
+
+### 25.6 Narrative Contract
+- 추천 화면에서 1~2문장 서사 문구를 필수 제공
+- 예시: "오늘 당신은 교토 숲의 늦은 오후에 있습니다."
+- Care Why 설명과 분리하여 Trip 전용 몰입 문맥으로 운영
+
+### 25.7 Visual/Audio Rules
+- Shower Trip:
+  - 물소리 충돌 방지 필터 적용
+  - 과도한 풀스크린 애니메이션 금지
+  - 미묘한 색 변화 중심
+- Bathtub/Partial Trip:
+  - 3중 오디오 레이어 허용
+  - 파동/증기/그라디언트 연출 확장
+  - 서사 길이 확장 허용
+
+### 25.8 TripCommerceBundle (Care와 분리)
+```txt
+TripCommerceBundle {
+  theme_match_weight
+  environment_fit_weight
+  prop_bundle_composition
+  trip_cta_copy
+}
+```
+
+규칙:
+- `TripCommerceBundle`은 Section 24의 기전 스코어링 공식을 사용하지 않는다.
+- 샤워 Trip 추천군:
+  - 바디워시
+  - 샤워 스티머
+  - 향 미스트
+- 입욕 Trip 추천군:
+  - 솔트
+  - 오일
+  - 밀크 타입
+
+### 25.9 Trip Memory Contract
+```txt
+TripMemoryContract {
+  completion_snapshot
+  theme_preference_weight
+  narrative_recall_card
+}
+```
+
+목표:
+- Trip 완료 순간의 정서/테마 문맥을 저장
+- 테마 선호 가중치를 누적
+- 이후 홈/기록 화면에서 narrative recall 카드로 재노출
+
+## 26. Home Orchestration Layer
+
+### 26.1 Home Orchestration Contract
+```txt
+HomeOrchestrationContract {
+  today_signal
+  primary_suggestion
+  secondary_suggestions
+  quick_actions
+  insight_strip
+  fallback_strategy
+}
+```
+
+### 26.2 EngineSelector (internal)
+```txt
+EngineSelector {
+  active_state
+  time_context
+  environment_context
+  priority_resolution
+}
+```
+
+원칙:
+- Home does not decide engines. Home displays the result of EngineSelector.
+- EngineSelector는 내부 정책 레이어이며 UI에서 직접 노출하지 않는다.
+
+### 26.3 자동 선택 및 fallback 정책
+- 데이터 부족: `Default Starter Ritual`
+- 고위험군 감지: `Safe Routine Only`
+- 심야 시간: `Sleep 우선`
+- 엔진 충돌: `priority_resolution`에 따라 단일 primary 결과만 노출
+
+### 26.4 UX 노출 가이드
+- The user should never be forced to choose between Care or Trip.
+- These are system constructs, not user-facing categories.
+
+## 27. Product Hub (Curated Bath Shop)
+
+### 27.1 역할 정의
+- ProductHub는 카테고리 중심 쇼핑 화면이 아니라 큐레이션 허브다.
+- ProductHub is a supporting commerce layer, not the primary entry point of the product.
+
+### 27.2 진열 원칙
+- 카테고리 중심 진열 금지
+- 루틴 중심 진열
+- 컬렉션:
+  - Mode-based Collection
+  - Theme-based Collection
+  - Starter Pack
+  - Seasonal Pack
+
+### 27.3 연결 정책
+- ProductHub는 Care/Trip 엔진과 독립적으로 탐색 가능
+- 추천 진입점은 Home 오케스트레이션 결과와 연동
+- 운영 가드라인: ProductHub를 전면 홈 대체 진입점으로 승격하지 않음
