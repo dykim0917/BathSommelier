@@ -18,7 +18,7 @@ export interface EnvironmentBase {
 /**
  * Adapts recommendation based on the selected bath environment.
  * - bathtub: keep base values
- * - footbath: force foot bath
+ * - footbath/partial_bath: force foot bath
  * - shower: force shower, cap duration to 10 min, replace incompatible ingredients
  */
 export function applyEnvironmentOverrides(
@@ -27,6 +27,7 @@ export function applyEnvironmentOverrides(
 ): ContextOverrides {
   switch (environment) {
     case 'footbath':
+    case 'partial_bath':
       return {
         bathType: 'foot',
         temperature: { ...base.temperature },

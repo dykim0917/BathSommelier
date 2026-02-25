@@ -2,7 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BathEnvironment } from '@/src/engine/types';
 import { STORAGE_KEYS } from './keys';
 
-const VALID_ENVIRONMENTS: BathEnvironment[] = ['bathtub', 'footbath', 'shower'];
+const VALID_ENVIRONMENTS: BathEnvironment[] = [
+  'bathtub',
+  'footbath',
+  'partial_bath',
+  'shower',
+];
 
 export async function saveLastEnvironment(environment: BathEnvironment): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.LAST_ENVIRONMENT, environment);

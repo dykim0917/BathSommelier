@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,18 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
-import { BathRecommendation } from '@/src/engine/types';
+import { BathRecommendation, TripMemoryRecord } from '@/src/engine/types';
 import { loadHistory } from '@/src/storage/history';
+import { loadThemePreferenceWeights, loadTripMemoryHistory } from '@/src/storage/memory';
+import { buildHistoryInsights } from '@/src/engine/historyInsights';
 import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { formatDuration } from '@/src/utils/time';
+import { THEME_BY_ID } from '@/src/data/themes';
 import {
   APP_BG_BOTTOM,
   APP_BG_TOP,
+  BTN_PRIMARY,
+  BTN_PRIMARY_TEXT,
   CARD_BORDER,
   CARD_SHADOW,
   CARD_SURFACE,
@@ -39,21 +44,54 @@ const MODE_LABELS = {
 
 const ENV_LABELS = {
   bathtub: '욕조',
+  partial_bath: '부분입욕',
   footbath: '족욕',
   shower: '샤워',
 } as const;
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<BathRecommendation[]>([]);
+  const [memoryHistory, setMemoryHistory] = useState<TripMemoryRecord[]>([]);
+  const [themeWeights, setThemeWeights] = useState<Record<string, number>>({});
+  const [isInsightExpanded, setIsInsightExpanded] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      loadHistory().then(setHistory);
+      Promise.all([
+        loadHistory(),
+        loadTripMemoryHistory(),
+        loadThemePreferenceWeights(),
+      ]).then(([historyData, memoryData, weightData]) => {
+        setHistory(historyData);
+        setMemoryHistory(memoryData);
+        setThemeWeights(weightData);
+      });
     }, [])
+  );
+
+  const memoryByRecommendation = useMemo(() => {
+    return Object.fromEntries(
+      memoryHistory.map((record) => [record.recommendationId, record])
+    ) as Record<string, TripMemoryRecord>;
+  }, [memoryHistory]);
+
+  const topThemeInsight = useMemo(() => {
+    const sorted = Object.entries(themeWeights).sort((a, b) => b[1] - a[1]);
+    if (sorted.length === 0) return null;
+    const [themeId, weight] = sorted[0];
+    const themeTitle = THEME_BY_ID[themeId as keyof typeof THEME_BY_ID]?.title ?? themeId;
+    return { themeTitle, weight };
+  }, [themeWeights]);
+
+  const latestMemory = memoryHistory[0] ?? null;
+  const insights = useMemo(
+    () => buildHistoryInsights(history, memoryHistory),
+    [history, memoryHistory]
   );
 
   const renderItem = ({ item }: { item: BathRecommendation }) => {
     const persona = PERSONA_DEFINITIONS.find((p) => p.code === item.persona);
+    const memory = memoryByRecommendation[item.id];
     const date = new Date(item.createdAt);
     const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 
@@ -84,6 +122,14 @@ export default function HistoryScreen() {
             {item.temperature.recommended}°C · {BATH_TYPE_LABELS[item.bathType]} · {formatDuration(item.durationMinutes)}
           </Text>
           <Text style={styles.cardSubMeta}>환경: {ENV_LABELS[item.environmentUsed]}</Text>
+          {memory ? (
+            <>
+              {memory.themeId ? (
+                <Text style={styles.memoryMeta}>선호 가중치: {memory.themePreferenceWeight}</Text>
+              ) : null}
+              <Text style={styles.memoryRecall}>{memory.narrativeRecallCard}</Text>
+            </>
+          ) : null}
         </View>
         <Text style={styles.cardDate}>{dateStr}</Text>
       </Pressable>
@@ -108,6 +154,57 @@ export default function HistoryScreen() {
           data={history}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          ListHeaderComponent={
+            <View style={styles.insightCard}>
+              <View style={styles.insightHeaderRow}>
+                <Text style={styles.insightTitle}>W17 • History Insight Expanded</Text>
+                <Pressable
+                  style={styles.expandButton}
+                  onPress={() => setIsInsightExpanded((prev) => !prev)}
+                >
+                  <Text style={styles.expandButtonText}>{isInsightExpanded ? '접기' : '펼치기'}</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.insightLine}>
+                총 세션: {insights.totalSessions} · CARE {insights.careSessions} · TRIP {insights.tripSessions}
+              </Text>
+              <Text style={styles.insightLine}>
+                평균 실행 시간: {insights.avgDurationMinutes > 0 ? `${insights.avgDurationMinutes}분` : '데이터 준비 중'}
+              </Text>
+              <Text style={styles.insightLine}>
+                최다 환경: {insights.topEnvironment ? ENV_LABELS[insights.topEnvironment] : '데이터 없음'}
+              </Text>
+              <Text style={styles.insightLine}>
+                완료 메모리 누적: {memoryHistory.length}건
+              </Text>
+              {topThemeInsight ? (
+                <Text style={styles.insightLine}>
+                  최다 선호 테마: {topThemeInsight.themeTitle} ({topThemeInsight.weight})
+                </Text>
+              ) : (
+                <Text style={styles.insightLine}>아직 선호 테마 데이터가 없습니다.</Text>
+              )}
+              {isInsightExpanded && insights.recentRecalls.length > 0 ? (
+                <View style={styles.recallList}>
+                  {insights.recentRecalls.map((recall, index) => (
+                    <Pressable
+                      key={recall.recommendationId}
+                      style={styles.recallCard}
+                      onPress={() => router.push(`/result/recipe/${recall.recommendationId}`)}
+                    >
+                      <Text style={styles.recallTitle}>Recall {index + 1}</Text>
+                      <Text style={styles.insightRecall}>{recall.text}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+              {isInsightExpanded && latestMemory && insights.recentRecalls.length === 0 ? (
+                <Text style={styles.insightRecall}>
+                  최근 recall: {latestMemory.narrativeRecallCard}
+                </Text>
+              ) : null}
+            </View>
+          }
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
         />
@@ -182,6 +279,17 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     marginTop: 2,
   },
+  memoryMeta: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_SECONDARY,
+    marginTop: 4,
+    fontWeight: '700',
+  },
+  memoryRecall: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    marginTop: 2,
+  },
   cardDate: {
     fontSize: TYPE_CAPTION,
     color: TEXT_MUTED,
@@ -204,6 +312,69 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: 13,
+    color: TEXT_SECONDARY,
+  },
+  insightCard: {
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  insightHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  insightTitle: {
+    color: TEXT_PRIMARY,
+    fontSize: TYPE_TITLE,
+    fontWeight: '700',
+  },
+  expandButton: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: BTN_PRIMARY,
+  },
+  expandButtonText: {
+    color: BTN_PRIMARY_TEXT,
+    fontSize: TYPE_CAPTION,
+    fontWeight: '700',
+  },
+  insightLine: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_SECONDARY,
+    lineHeight: 18,
+  },
+  insightRecall: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    lineHeight: 18,
+  },
+  recallList: {
+    marginTop: 8,
+    gap: 6,
+  },
+  recallCard: {
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    gap: 2,
+  },
+  recallTitle: {
+    fontSize: TYPE_CAPTION,
+    fontWeight: '700',
     color: TEXT_SECONDARY,
   },
 });

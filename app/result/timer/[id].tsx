@@ -19,10 +19,12 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { BathRecommendation } from '@/src/engine/types';
 import { getRecommendationById } from '@/src/storage/history';
-import { saveSession } from '@/src/storage/session';
+import { saveSession, updateSessionCompletion } from '@/src/storage/session';
 import { WaterAnimation } from '@/src/components/WaterAnimation';
 import { SteamAnimation } from '@/src/components/SteamAnimation';
 import { AudioMixer } from '@/src/components/AudioMixer';
+import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
+import { buildDisclosureLines } from '@/src/engine/disclosures';
 import { useDualAudioPlayer } from '@/src/hooks/useDualAudioPlayer';
 import {
   APP_BG_BOTTOM,
@@ -45,6 +47,7 @@ export default function TimerScreen() {
   const [showControls, setShowControls] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<string>(new Date().toISOString());
+  const isCompletingRef = useRef(false);
 
   const audio = useDualAudioPlayer(
     recommendation?.music ?? null,
@@ -84,14 +87,21 @@ export default function TimerScreen() {
     });
   }, [id]);
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = useCallback(async () => {
+    if (!id || isCompletingRef.current) return;
+    isCompletingRef.current = true;
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
     stopAudio();
+
+    const completedAt = new Date().toISOString();
+    const actualDurationSeconds = Math.max(0, totalSeconds - remainingSeconds);
+    await updateSessionCompletion(id, completedAt, actualDurationSeconds);
     router.replace(`/result/completion/${id}`);
-  }, [id, stopAudio]);
+  }, [id, remainingSeconds, stopAudio, totalSeconds]);
 
   useEffect(() => {
     if (!recommendation || totalSeconds === 0) return;
@@ -175,6 +185,16 @@ export default function TimerScreen() {
 
   const waterProgress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 1;
   const isShowerImmersive = recommendation.environmentUsed === 'shower' || recommendation.bathType === 'shower';
+  const timerDisclosureLines = buildDisclosureLines({
+    fallbackStrategy: 'none',
+    selectedMode:
+      recommendation.mode === 'trip'
+        ? 'recovery'
+        : recommendation.persona === 'P4_SLEEP'
+          ? 'sleep'
+          : 'recovery',
+    healthConditions: [],
+  });
 
   return (
     <View style={styles.container}>
@@ -194,6 +214,9 @@ export default function TimerScreen() {
       <Pressable style={StyleSheet.absoluteFill} onPress={toggleControls}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.timerContainer}>
+            <View style={styles.stepBadge}>
+              <Text style={styles.stepBadgeText}>STEP 2 • 실행</Text>
+            </View>
             <Text style={styles.timerText}>{timeStr}</Text>
             {isPaused && (
               <Animated.Text
@@ -230,17 +253,23 @@ export default function TimerScreen() {
                     </Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={[styles.controlButton, { backgroundColor: recommendation.colorHex }]}
-                    onPress={handleComplete}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.finishButtonText}>끝내기</Text>
-                  </TouchableOpacity>
+                  <View style={styles.endButtonPlaceholder} />
                 </View>
               </>
             )}
           </Animated.View>
+
+          <TouchableOpacity
+            style={[styles.floatingFinishButton, { backgroundColor: recommendation.colorHex }]}
+            onPress={handleComplete}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.finishButtonText}>끝내기</Text>
+          </TouchableOpacity>
+
+          <View style={styles.disclosureWrap}>
+            <PersistentDisclosure lines={timerDisclosureLines} />
+          </View>
         </SafeAreaView>
       </Pressable>
     </View>
@@ -265,6 +294,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  stepBadge: {
+    marginBottom: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    color: TEXT_SECONDARY,
+    fontWeight: '700',
+  },
   timerText: {
     fontSize: 72,
     fontWeight: '200',
@@ -288,6 +331,9 @@ const styles = StyleSheet.create({
   buttonsRow: {
     flexDirection: 'row',
     gap: 12,
+  },
+  endButtonPlaceholder: {
+    flex: 1,
   },
   controlButton: {
     flex: 1,
@@ -314,5 +360,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#fff',
+  },
+  floatingFinishButton: {
+    position: 'absolute',
+    right: 20,
+    top: 56,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    shadowColor: CARD_SHADOW_SOFT,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  disclosureWrap: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 8,
   },
 });

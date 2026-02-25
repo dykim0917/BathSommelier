@@ -15,6 +15,21 @@ export async function loadSession(): Promise<BathSession | null> {
   return JSON.parse(data) as BathSession;
 }
 
+export async function updateSessionCompletion(
+  recommendationId: string,
+  completedAt: string,
+  actualDurationSeconds: number
+): Promise<void> {
+  const current = await loadSession();
+  if (!current || current.recommendationId !== recommendationId) return;
+
+  await saveSession({
+    ...current,
+    completedAt,
+    actualDurationSeconds,
+  });
+}
+
 export async function clearSession(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEYS.ACTIVE_SESSION);
 }

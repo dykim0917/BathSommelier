@@ -1,5 +1,60 @@
 // --- Bath Environment ---
-export type BathEnvironment = 'bathtub' | 'footbath' | 'shower';
+// `footbath` is kept for backward compatibility with existing stored/profile values.
+export type BathEnvironment = 'bathtub' | 'shower' | 'partial_bath' | 'footbath';
+export type CanonicalBathEnvironment = 'bathtub' | 'shower' | 'partial_bath';
+export type PartialBathSubtype = 'low_leg' | 'footbath';
+
+// --- Home Orchestration ---
+export type ActiveState =
+  | 'tension'
+  | 'heavy'
+  | 'cant_sleep'
+  | 'low_mood'
+  | 'want_reset';
+
+export type TimeContext = 'late_night' | 'morning' | 'day' | 'evening';
+export type HomeModeType = 'sleep' | 'recovery' | 'reset';
+export type PriorityResolution = 'CARE_PRIMARY__TRIP_SECONDARY';
+export type HomeSuggestionRank = 'primary' | 'secondary_1' | 'secondary_2';
+export type FallbackStrategy =
+  | 'none'
+  | 'DEFAULT_STARTER_RITUAL'
+  | 'SAFE_ROUTINE_ONLY'
+  | 'RESET_WITHOUT_COLD'
+  | 'ROUTINE_ONLY_NO_COMMERCE';
+
+export interface HomeSuggestion {
+  id: string;
+  rank: HomeSuggestionRank;
+  mode: RecommendationMode;
+  title: string;
+  subtitle: string;
+  dailyTags?: DailyTag[];
+  themeId?: ThemeId;
+}
+
+export interface SuggestionExplanation {
+  stateLabel: string;
+  whySummary: string;
+  routineParams: string;
+  expectedGoal: string;
+  alternativeRoutine: string;
+  narrativeHeadline?: string;
+  atmosphereChips?: string[];
+}
+
+export interface HomeOrchestrationContract {
+  todaySignal: string;
+  baseMode: HomeModeType;
+  selectedMode: HomeModeType;
+  engineConflictResolved: boolean;
+  primarySuggestion: HomeSuggestion;
+  secondarySuggestions: HomeSuggestion[];
+  quickActions: string[];
+  insightStrip: string;
+  fallbackStrategy: FallbackStrategy;
+  priorityResolution: PriorityResolution;
+}
 
 // --- Recommendation Modes ---
 export type RecommendationMode = 'care' | 'trip';
@@ -123,6 +178,25 @@ export interface BathSession {
   completedAt?: string;
   feedback?: BathFeedback;
   actualDurationSeconds?: number;
+}
+
+export interface CompletionSnapshot {
+  recommendationId: string;
+  completedAt: string;
+  mode: RecommendationMode;
+  environment: BathEnvironment;
+  temperatureRecommended: number;
+  durationMinutes: number | null;
+  feedback: BathFeedback;
+}
+
+export interface TripMemoryRecord {
+  recommendationId: string;
+  themeId: ThemeId | null;
+  themeTitle: string | null;
+  completionSnapshot: CompletionSnapshot;
+  themePreferenceWeight: number;
+  narrativeRecallCard: string;
 }
 
 // --- Bath Recommendation Output ---

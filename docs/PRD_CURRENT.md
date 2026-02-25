@@ -1,8 +1,8 @@
-# PRD — Bath Sommelier v3.9.1 (Target UX + Personalization/Commerce/Legal + Home Orchestration)
+# PRD — Bath Sommelier v3.10.2 (Market-first Validation + Home Orchestration)
 
-버전: v3.9.1 (Target UX Spec)  
+버전: v3.10.2 (Target UX Spec)  
 기준일: 2026-02-13  
-문서 목적: 목표형 제품 요구사항 + 개인화 학습 + 커머스 검증 + 법적 완충 구조를 통합 정의하며, 제품을 Digital Balneotherapy Platform 포지셔닝으로 확장하고 Home 오케스트레이션 레이어를 중심으로 Care/Trip 엔진 및 ProductHub 구조를 정밀화한다(의료적 진단/치료 주장 금지).
+문서 목적: 목표형 제품 요구사항 + 개인화 학습 + 커머스 검증 + 법적 완충 구조를 통합 정의하며, PMF 검증 우선 순서(가설-실험-판단)를 상위 원칙으로 고정한다. Home 오케스트레이션 레이어를 중심으로 Care/Trip 엔진 및 ProductHub 구조를 정밀화하되 의료적 진단/치료 주장으로 해석될 표현은 금지한다.
 
 ## 1. 제품 핵심가치
 BathSommelier의 핵심은 다음 한 문장으로 정의한다.
@@ -12,6 +12,7 @@ BathSommelier의 핵심은 다음 한 문장으로 정의한다.
 모든 입력, 추천, 실행, 피드백, 리텐션, 커머스 기능은 이 원칙을 기준으로 설계한다.
 
 ## 2. 제품 목표
+- 시장성 검증을 기능 확장보다 우선한다 (PMF 신호: 시작률/완료율/7일 재방문).
 - 사용자 상태를 짧은 입력으로 파악하고 맞춤 루틴을 제시한다.
 - 추천 결과에 "왜 이 추천인지"를 설명해 납득도를 높인다.
 - 추천을 단순 제안이 아닌 단계형 실행 루틴으로 연결한다.
@@ -25,7 +26,7 @@ BathSommelier의 핵심은 다음 한 문장으로 정의한다.
 - 감정 환기/기분 전환/리셋을 원하는 사용자
 - 욕조 없이 샤워/족욕 중심으로 웰니스 루틴을 쓰는 사용자
 
-## 4. Information Architecture (v3.9.1)
+## 4. Information Architecture (v3.10)
 Home = Unified Orchestration Layer  
 CareEngine = Physiological Engine  
 TripEngine = Immersion Engine  
@@ -37,6 +38,7 @@ ProductHub = Curated Bath Shop
 - Home does not decide engines. Home displays the result of EngineSelector.
 - Engines are implementation layers, Home is the user-facing decision layer.
 - Home is a decision simplification layer, not a category navigation layer.
+- 운영 목적: Home은 카테고리 탐색보다 실행 단순화를 우선해 PMF 신호(시작/완료/재방문)를 개선한다.
 
 구조 다이어그램:
 ```txt
@@ -157,7 +159,7 @@ ProductHub (supporting commerce)
 ### 소믈리에 페르소나 문구 템플릿
 - "오늘 당신은 긴장형 피로 상태입니다."
 - "심신 이완을 위해 라벤더 + 우디 계열 루틴을 추천합니다."
-- "38~40°C, 15분 중심 루틴이 적합합니다."
+- "오늘 컨디션과 안전 기준에 맞춘 온도/시간 중심 루틴이 적합합니다."
 
 ## 8. Routine Execution Contract
 - 단계 고정: `준비 → 입욕/샤워 → 마무리`
@@ -168,6 +170,13 @@ ProductHub (supporting commerce)
 - 첫 진입은 경량 온보딩(2~3문항)만 수행
 - 추가 프로파일은 루틴 완료 후 점진 수집
 - 사용자에게 "정확도 향상" 맥락으로 안내
+- 건강 상태 입력 정책(`HealthInputPolicy`):
+  - `health_input_required = false`
+  - `health_input_mode = optional_with_safety_reason`
+  - `fallback_when_missing = safe_default_routine`
+- 온보딩 실험(필수):
+  - 상태 1탭 vs 2~3문항
+  - 비교 지표: 온보딩 완료율, 추천 클릭률, 루틴 시작률
 
 ## 10. 리텐션 루프
 - 루틴 완료 후 전/후 기분 체크
@@ -184,13 +193,16 @@ ProductHub (supporting commerce)
 - Environment Compatibility Rule (추천 전 선필터 필수):
   - bathtub/partial: `powder | salt | milk | oil`
   - shower: `steamer | bodywash | mist | tablet (if applicable)`
-- 상태가 Recovery 또는 Sleep이면 중성 중탄산 계열 제품 우선 노출
+- 기전 우선순위 정책:
+  - Sleep: `bicarbonate` 우선
+  - Recovery: `magnesium` 우선, `bicarbonate`는 슬롯 C 전략 노출로 보장
 - 모드별 상세 프로토콜은 Section 23을 참조해 커머스 추천 근거에 반영
 - 제품 매칭/스코어링/슬롯 규칙은 Section 24를 단일 소스로 참조
 - Trip 커머스는 Section 25의 `TripCommerceBundle` 규칙을 우선 적용
 - 경계 원칙: `TripCommerceBundle`은 Section 24 기전 스코어 공식을 사용하지 않음
 - Care/Trip 공통 규칙: 환경 호환 필터를 먼저 통과한 후보만 다음 단계(안전/스코어링)로 전달
 - Home/EngineSelector는 표시/선정 레이어이며, Section 24/25 엔진 출력 결과를 사용자에게 단순화해 노출
+- ProductHub는 supporting commerce layer이며 product primary entry point로 사용하지 않는다.
 
 ### 11.2 제품 수 및 구성 규칙
 - 최대 3개
@@ -270,6 +282,16 @@ ProductHub (supporting commerce)
 - ~을 완화하는 데 초점을 둡니다
 - 기전 안내 템플릿: "이 제품은 [기전] 기반으로 [루틴 목적]을 돕는 데 적합합니다."
 
+### 13.3 문구 변환 예시
+- 기존: "지방에 쌓인 노폐물 제거"
+- 변경: "순환을 촉진하는 환경을 조성하여 상쾌함을 돕습니다"
+
+- 기존: "면역력 강화"
+- 변경: "따뜻한 환경은 신체 이완과 회복에 도움을 줄 수 있습니다"
+
+- 기존: "수면 개선"
+- 변경: "수면 준비 상태를 만드는 데 도움을 줄 수 있습니다"
+
 ### 13.4 Trip Copy Firewall
 - Trip 금지 어휘:
   - 혈류
@@ -290,15 +312,13 @@ ProductHub (supporting commerce)
 - 주의 어휘:
   - "회복"은 Trip 문맥에서 Care 오해를 유발할 수 있으므로 narrative 맥락으로 제한 사용
 
-### 13.3 문구 변환 예시
-- 기존: "지방에 쌓인 노폐물 제거"
-- 변경: "순환을 촉진하는 환경을 조성하여 상쾌함을 돕습니다"
-
-- 기존: "면역력 강화"
-- 변경: "따뜻한 환경은 신체 이완과 회복에 도움을 줄 수 있습니다"
-
-- 기존: "수면 개선"
-- 변경: "수면 준비 상태를 만드는 데 도움을 줄 수 있습니다"
+### 13.5 포지셔닝 용어 정책 (내부/외부 분리)
+- 외부 커뮤니케이션 권장:
+  - `Bath & Shower Ritual OS`
+  - `Bathroom Wellness Routine`
+- 내부 R&D 문맥 전용:
+  - `Digital Balneotherapy Platform`
+- 사용자 노출 문맥에서 "치유/회복"은 의료적 기대를 유발하지 않도록 맥락 통제
 
 ## 14. 기존 기능 범위 유지 항목
 - Trip 테마 선택 구조
@@ -404,6 +424,23 @@ ProductHub (supporting commerce)
 - `trip_variant_used_lite_or_deep` (권장)
 - `trip_narrative_engaged` (권장)
 - `trip_bundle_click` (권장)
+- `onboarding_variant_exposed` (권장)
+- `onboarding_completed` (권장)
+- `why_explainer_exposed` (권장)
+- `routine_started_after_why` (권장)
+- `personalization_message_exposed` (권장)
+- `return_after_personalization_message` (권장)
+- `health_input_prompt_seen` (권장)
+- `health_input_submitted_optional` (권장)
+
+필수 공통 프로퍼티 스키마(단일 소스):
+- `user_id`, `session_id`, `app_version`, `locale`
+- `time_context`, `environment`, `partial_bath_subtype`
+- `active_state`, `mode_type`
+- `suggestion_id`, `suggestion_rank`
+- `fallback_strategy_applied`
+- `experiment_id`, `variant`
+- 상세 필드 정의/타입은 `/Users/exem/DK/BathSommelier/docs/ANALYTICS_APPENDIX.md`를 따른다.
 
 ### 19.2 단계형 KPI
 
@@ -439,6 +476,24 @@ Scale 기준:
 - 모드별 퍼널(추천 노출→카드 클릭→상세 진입→제휴 이동→7일 재방문) 개선
 - Care/Trip 세션 분리 리포팅으로 Trip 퍼널 개선 확인
 
+### 19.4 시장성 가정-지표 매핑 (필수 대시보드)
+- 사용 빈도 가정:
+  - 지표: `environment_session_count`, `7d_retention_by_environment`
+  - 세그먼트: `shower | bathtub | partial`
+- 입력 마찰 가정:
+  - 지표: `onboarding_completion_rate`, `recommendation_click_rate`, `routine_start_rate`
+  - 실험: `one_tap_state` vs `2to3_questions`
+- Why 효과 가정:
+  - 지표: `routine_start_rate`, `routine_completion_rate`
+  - 실험: `why_exposed` vs `why_hidden`
+- 개인화 체감 가정:
+  - 지표: `return_after_personalization_message`
+- 커머스 가정:
+  - 지표: `CTR`, `detail_entry`, `affiliate_transition`, `pick_share`
+  - 실험: `3_products_plus_pick` vs `1_product_deep_explain`
+- 건강 입력 이탈 가정:
+  - 지표: 온보딩 완료율, 건강 입력 제출률(선택), 이탈률
+
 ## 20. Sommelier AI
 
 ### 20.1 알고리즘 구조
@@ -453,6 +508,11 @@ Scale 기준:
    - TripEngine: narrative/visual/audio 연출 담당
 8. 충돌 해결 원칙:
    - `if user_has_active_state: apply_care_protocol(); apply_trip_immersion_overlay();`
+9. Reset 리스크 게이트(`ResetRiskGate`):
+   - `default_reset_mode = non_cold_activation`
+   - `cold_exposure_enabled = advanced_opt_in_only`
+   - `consent_required = true`
+   - `hard_block_conditions = existing contraindications`
 
 ### 20.2 상태 매핑 예시
 - 긴장 과다 → 교감신경 우위
@@ -523,6 +583,7 @@ Scale 기준:
 - 항상 노출(조건부 숨김 없음)
 - 문구 축약/완곡 표현 금지 (법적 완충 목적 유지)
 - Mechanism Highlight 문구도 동일 정책 적용(의료 단정/치료 암시 금지)
+- 외부 메시지는 웰니스 루틴 톤으로 유지하고 내부 R&D 용어와 분리 운영
 
 ## 22. 문서 추가 검증 체크리스트
 
@@ -585,6 +646,15 @@ Scale 기준:
 - `fallback_strategy` 및 3개 이상 fallback 시나리오가 명시되었는가
 - 사용자에게 Care/Trip 강제 선택 금지 문구가 포함되었는가
 - ProductHub가 supporting commerce layer로 명시되었는가
+- Home does not decide engines 문구가 Section 4/26에서 동일하게 재사용되는가
+- Home is a decision simplification layer 문구가 IA 핵심 원칙으로 고정되는가
+
+### 시장성 검증 설계
+- 6개 시장성 가정이 `가설-실험-판단규칙` 형태로 명시되었는가
+- 가정별 KPI/이벤트가 1:1로 연결되었는가
+- ResetRiskGate(비냉수 기본/냉수 opt-in/추가 동의)가 명시되었는가
+- HealthInputPolicy(선택 입력 + 안전 목적 설명)가 명시되었는가
+- 외부/내부 포지셔닝 용어 분리 정책이 명시되었는가
 
 ## 23. Mode-Specific Algorithm Definition
 
@@ -637,6 +707,10 @@ if ModeType == "sleep":
 - 멘탈 리셋
 - 교감신경 순간 활성
 
+PMF 1단계 기본값:
+- `non_cold_activation` 루틴을 기본으로 제공
+- 냉수/교대 샤워는 고급 옵션 + 추가 동의 후 노출
+
 프로토콜:
 - 옵션 A(냉온 교대 샤워):
   - Warm `40°C` `3~5분`
@@ -658,6 +732,7 @@ if ModeType == "sleep":
 안전게이트:
 - 고위험군은 냉수 단계 비활성화
 - 대체 루틴: 온수 단일 루틴 또는 반신/저위 입욕
+- 사용자 추가 동의 없이는 냉수 단계 비노출
 
 의사코드:
 ```txt
@@ -726,7 +801,7 @@ if ModeType == "recovery":
 ### 24.1 ProductProfile 데이터 계약
 ```txt
 ProductProfile {
-  category: powder | tablet | salt | oil | milk
+  category: powder | tablet | salt | oil | milk | steamer | bodywash | mist
   core_mechanism: bicarbonate | magnesium | aromatic | moisturizing | detox
   primary_mode_fit: sleep | recovery | reset | hygiene
   environment_fit: bathtub | shower | both
@@ -793,8 +868,13 @@ Tie-break 규칙:
 
 ### 24.4 3제품 슬롯 구성 알고리즘
 - 슬롯 A: 기전 기반 대표 제품
+- Recovery 슬롯 A 고정 정책: `magnesium` 우선
 - 슬롯 B: 향 기반 감성 제품
-- 슬롯 C: 가성비 대안
+- 슬롯 C: 가성비 대안(Recovery에서는 `bicarbonate` 전략 노출 우선)
+- 정규 규칙(충돌 금지):
+  - Sleep: Slot A=`bicarbonate`, Slot B=`aromatic`, Slot C=`magnesium 또는 bicarbonate 대안`
+  - Recovery: Slot A=`magnesium`, Slot B=`warming aroma`, Slot C=`bicarbonate/value`
+  - Reset: Slot A=`tablet + stimulating`, Slot B=`sensory`, Slot C=`non-cold activation 대안`
 - 공통 제약:
   - 저가/중가/고가 분산 유지
   - 중복 기전 과다 노출 방지
@@ -809,6 +889,11 @@ scored = score_products(safe_candidates, mode, user_preference, fixed_weights)
 slots = compose_three_slots(scored, [mechanism, sensory, value])
 return diversify_price_tiers(slots)
 ```
+
+구현 기준 부록:
+- EngineSelector/우선순위 정책: `/Users/exem/DK/BathSommelier/docs/POLICY_APPENDIX.md`
+- 이벤트 필수 프로퍼티 스키마: `/Users/exem/DK/BathSommelier/docs/ANALYTICS_APPENDIX.md`
+- Default/Safe 루틴 파라미터: `/Users/exem/DK/BathSommelier/docs/CONFIG_APPENDIX.md`
 
 ## 25. Trip Immersion Engine
 
@@ -930,6 +1015,8 @@ HomeOrchestrationContract {
   fallback_strategy
 }
 ```
+규칙:
+- `fallback_strategy`는 required contract field다.
 
 ### 26.2 EngineSelector (internal)
 ```txt
@@ -946,10 +1033,15 @@ EngineSelector {
 - EngineSelector는 내부 정책 레이어이며 UI에서 직접 노출하지 않는다.
 
 ### 26.3 자동 선택 및 fallback 정책
+MUST cover 시나리오:
 - 데이터 부족: `Default Starter Ritual`
 - 고위험군 감지: `Safe Routine Only`
 - 심야 시간: `Sleep 우선`
 - 엔진 충돌: `priority_resolution`에 따라 단일 primary 결과만 노출
+- reset + 금기군: `RESET_WITHOUT_COLD` (냉수 단계/CTA 완전 비노출)
+- 제품 후보 부족: `ROUTINE_ONLY_NO_COMMERCE` (루틴 실행 유지, 커머스 영역 숨김)
+
+Fallback 루틴 상세 파라미터는 `/Users/exem/DK/BathSommelier/docs/CONFIG_APPENDIX.md`를 단일 소스로 MUST 참조한다.
 
 ### 26.4 UX 노출 가이드
 - The user should never be forced to choose between Care or Trip.
@@ -959,7 +1051,7 @@ EngineSelector {
 
 ### 27.1 역할 정의
 - ProductHub는 카테고리 중심 쇼핑 화면이 아니라 큐레이션 허브다.
-- ProductHub is a supporting commerce layer, not the primary entry point of the product.
+- **ProductHub is a supporting commerce layer, not the primary entry point of the product.**
 
 ### 27.2 진열 원칙
 - 카테고리 중심 진열 금지
@@ -973,4 +1065,105 @@ EngineSelector {
 ### 27.3 연결 정책
 - ProductHub는 Care/Trip 엔진과 독립적으로 탐색 가능
 - 추천 진입점은 Home 오케스트레이션 결과와 연동
-- 운영 가드라인: ProductHub를 전면 홈 대체 진입점으로 승격하지 않음
+- 운영 가드라인(MUST): ProductHub를 전면 홈 대체 진입점으로 승격하지 않음
+
+## 28. Market Hypotheses & Validation Sequence
+
+### 28.1 공통 가설 계약 (`MarketHypothesis`)
+```txt
+MarketHypothesis {
+  id
+  hypothesis_statement
+  success_metric
+  guardrail_metric
+  experiment_design
+  decision_rule
+  owner
+  review_cycle
+}
+```
+
+보조 이벤트 계약 (`ValidationEventSpec`)
+```txt
+ValidationEventSpec {
+  event_name
+  required_properties
+  segment_keys
+  attribution_window
+}
+```
+
+### 28.2 가설 6개 (우선 검증)
+1. 사용 빈도 가정:
+- 가설: 샤워/부분입욕 포함 시 주 3회 사용 가능
+- 검증: `shower | bathtub | partial` 환경별 세션 수 + 7일 리텐션
+
+2. 입력 마찰 가정:
+- 가설: 2~3문항은 일상 사용 마찰이 될 수 있음
+- 검증: 상태 1탭 vs 2~3문항 A/B, 추천 클릭/시작률 비교
+
+3. Why 효과 가정:
+- 가설: Why 설명 노출이 실행률/완료율을 높임
+- 검증: Why 노출군 vs 미노출군
+
+4. 개인화 체감 가정:
+- 가설: 5~10회 내 “점점 나를 안다” 체감 형성
+- 검증: 개인 보정 메시지 노출 전후 재방문
+
+5. 3슬롯 커머스 가정:
+- 가설: 3개+Pick 구조가 CTR/전환을 만든다
+- 검증: 3개+Pick vs 1개+깊은 설명
+
+6. 건강 입력 이탈 가정:
+- 가설: 건강 상태 필수 입력은 온보딩 이탈을 증가시킴
+- 검증: 필수 vs 선택+안전 목적 설명 비교
+
+### 28.3 의사결정 규칙
+- 각 가설은 성공/유지/전환 기준을 사전에 고정
+- 2개 연속 review_cycle에서 실패 시 해당 기능 확장 중단 또는 축소
+- PMF 미확정 시 ProductHub 확장보다 Home/실행률 개선 작업을 우선
+
+## 29. MVP Execution Order (Market-first)
+Jira 실행 백로그(에픽/스토리/AC)는 `/Users/exem/DK/BathSommelier/docs/JIRA_EXECUTION_BACKLOG_v3.10.2.md`를 단일 소스로 참조한다.
+
+### 29.1 실행 우선순위
+1. Home Orchestration: Primary 1 + Secondary 0~2
+2. Explanation Contract: Why/목표/대안 루틴
+3. Safety/Legal 상시 노출 + 카피 정책 정합
+4. Mood 전/후 2탭 + 이벤트 로깅
+5. 커머스 3슬롯 + 근거 + CTA 실험
+6. ProductHub 확장은 후순위
+
+### 29.2 리스크 게이트
+Reset 리스크 게이트 (`ResetRiskGate`)
+```txt
+ResetRiskGate {
+  default_reset_mode = non_cold_activation
+  cold_exposure_enabled = advanced_opt_in_only
+  consent_required = true
+  hard_block_conditions = existing_contraindications
+}
+```
+
+건강 입력 정책 (`HealthInputPolicy`)
+```txt
+HealthInputPolicy {
+  health_input_required = false
+  health_input_mode = optional_with_safety_reason
+  fallback_when_missing = safe_default_routine
+}
+```
+
+개발 전 게이트(필수):
+- PRD 본문 + 아래 부록 3종을 함께 Lock한 뒤 개발 착수
+  - `/Users/exem/DK/BathSommelier/docs/POLICY_APPENDIX.md`
+  - `/Users/exem/DK/BathSommelier/docs/ANALYTICS_APPENDIX.md`
+  - `/Users/exem/DK/BathSommelier/docs/CONFIG_APPENDIX.md`
+
+### 29.3 포지셔닝/카피 운영 규칙
+- 외부 포지셔닝 권장:
+  - `Bath & Shower Ritual OS`
+  - `Bathroom Wellness Routine`
+- 내부 용어:
+  - `Digital Balneotherapy Platform`은 내부 문맥에 한정
+- Reset 냉수 노출은 PMF 1단계에서 기본값으로 사용하지 않는다

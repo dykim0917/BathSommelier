@@ -14,6 +14,7 @@ import { getRecommendationById } from '@/src/storage/history';
 import { GradientBackground } from '@/src/components/GradientBackground';
 import { PersonaCard } from '@/src/components/PersonaCard';
 import { IngredientCarousel } from '@/src/components/IngredientCarousel';
+import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import {
   BG,
   CARD_BORDER_SOFT,
@@ -70,6 +71,9 @@ export default function RecipeScreen() {
           </TouchableOpacity>
 
           <Animated.View entering={FadeIn.duration(450)} style={styles.modeRow}>
+            <View style={styles.stepBadge}>
+              <Text style={styles.stepBadgeText}>STEP 1 • 준비</Text>
+            </View>
             <View style={[styles.modeBadge, { borderColor: recommendation.colorHex }]}>
               <Text style={[styles.modeBadgeText, { color: recommendation.colorHex }]}>{modeLabel}</Text>
             </View>
@@ -99,6 +103,12 @@ export default function RecipeScreen() {
             entering={FadeInDown.duration(500).delay(280)}
             style={[styles.bottomSection, compact && styles.bottomSectionCompact]}
           >
+            <View style={styles.safetyBlock}>
+              <Text style={styles.safetyTitle}>안전 가이드</Text>
+              <Text style={styles.safetyText}>• 38~40°C 권장 (수면 루틴은 38~41°C)</Text>
+              <Text style={styles.safetyText}>• 10~15분 권장, 이상 증상 시 즉시 중단</Text>
+              <Text style={styles.safetyText}>• 음주 직후 사용 금지</Text>
+            </View>
             <TouchableOpacity
               style={[styles.startButton, { backgroundColor: recommendation.colorHex }]}
               onPress={handleStartBath}
@@ -106,6 +116,7 @@ export default function RecipeScreen() {
             >
               <Text style={styles.startButtonText}>입욕 시작</Text>
             </TouchableOpacity>
+            <PersistentDisclosure />
           </Animated.View>
         </SafeAreaView>
       </GradientBackground>
@@ -145,6 +156,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 4,
     gap: 10,
+    flexWrap: 'wrap',
+  },
+  stepBadge: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: TEXT_SECONDARY,
   },
   modeBadge: {
     borderWidth: 1,
@@ -187,6 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingBottom: 12,
+    gap: 10,
   },
   bottomSectionCompact: {
     flex: 1.5,
@@ -209,5 +235,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     letterSpacing: 0.5,
+  },
+  safetyBlock: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    backgroundColor: 'rgba(255,255,255,0.86)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 2,
+  },
+  safetyTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: TEXT_PRIMARY,
+    marginBottom: 2,
+  },
+  safetyText: {
+    fontSize: 11,
+    color: TEXT_SECONDARY,
+    lineHeight: 16,
   },
 });

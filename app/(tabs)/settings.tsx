@@ -13,6 +13,7 @@ import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import { BathEnvironment, HealthCondition } from '@/src/engine/types';
 import { clearProfile } from '@/src/storage/profile';
+import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import {
   ACCENT,
   APP_BG_BOTTOM,
@@ -29,6 +30,7 @@ import {
 
 const ENV_LABELS: Record<BathEnvironment, string> = {
   bathtub: '🛁 욕조',
+  partial_bath: '🦶 부분입욕',
   footbath: '🦶 족욕',
   shower: '🚿 샤워',
 };
@@ -117,6 +119,7 @@ export default function SettingsScreen() {
             <Text style={styles.infoLabel}>이름</Text>
             <Text style={styles.infoValue}>Bath Sommelier</Text>
           </View>
+          <PersistentDisclosure style={styles.disclosureInline} showColdWarning />
         </View>
       </ScrollView>
     </View>
@@ -221,5 +224,8 @@ const styles = StyleSheet.create({
   actionArrow: {
     fontSize: 18,
     color: ACCENT,
+  },
+  disclosureInline: {
+    marginTop: 8,
   },
 });

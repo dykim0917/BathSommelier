@@ -10,9 +10,11 @@ import { useLocalSearchParams, router } from 'expo-router';
 import Animated, { FadeIn, BounceIn } from 'react-native-reanimated';
 import { BathRecommendation, BathFeedback } from '@/src/engine/types';
 import { getRecommendationById, getMonthlyCount, updateRecommendationFeedback } from '@/src/storage/history';
-import { clearSession } from '@/src/storage/session';
+import { clearSession, loadSession } from '@/src/storage/session';
+import { applyFeedbackToThemePreference, saveCompletionMemory } from '@/src/storage/memory';
 import { getTimeBasedMessage } from '@/src/utils/messages';
 import { GradientBackground } from '@/src/components/GradientBackground';
+import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import {
   BG,
   CARD_BORDER_SOFT,
@@ -31,12 +33,42 @@ export default function CompletionScreen() {
     useState<BathRecommendation | null>(null);
   const [monthlyCount, setMonthlyCount] = useState(0);
   const [feedback, setFeedback] = useState<BathFeedback>(null);
+  const [memoryNarrative, setMemoryNarrative] = useState<string | null>(null);
+  const [themeWeight, setThemeWeight] = useState<number | null>(null);
+  const [snapshotLine, setSnapshotLine] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
-    getRecommendationById(id).then((rec) => {
-      if (rec) setRecommendation(rec);
+    getRecommendationById(id).then(async (rec) => {
+      if (!rec) return;
+      setRecommendation(rec);
+      const session = await loadSession();
+      const actualDurationMinutes =
+        session?.recommendationId === id && session.actualDurationSeconds !== undefined
+          ? Math.max(1, Math.round(session.actualDurationSeconds / 60))
+          : rec.durationMinutes;
+
+      const memory = await saveCompletionMemory(rec, null, {
+        completedAt:
+          session?.recommendationId === id && session.completedAt
+            ? session.completedAt
+            : undefined,
+        durationMinutes: actualDurationMinutes,
+      });
+      setMemoryNarrative(memory.narrativeRecallCard);
+      if (memory.themeId) {
+        setThemeWeight(memory.themePreferenceWeight);
+      }
+      setSnapshotLine(
+        `${memory.completionSnapshot.temperatureRecommended}°C · ${
+          memory.completionSnapshot.durationMinutes !== null
+            ? `${memory.completionSnapshot.durationMinutes}분`
+            : '시간 자유'
+        } · ${memory.completionSnapshot.environment} · ${new Date(
+          memory.completionSnapshot.completedAt
+        ).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 완료`
+      );
     });
 
     const now = new Date();
@@ -47,6 +79,10 @@ export default function CompletionScreen() {
     if (!id || feedback) return;
     setFeedback(value);
     await updateRecommendationFeedback(id, value);
+    if (recommendation?.themeId) {
+      const next = await applyFeedbackToThemePreference(recommendation.themeId, value);
+      setThemeWeight(next);
+    }
   };
 
   const handleGoHome = async () => {
@@ -84,6 +120,9 @@ export default function CompletionScreen() {
             </Animated.Text>
 
             <Animated.View entering={FadeIn.duration(600).delay(400)}>
+              <View style={styles.stepBadge}>
+                <Text style={styles.stepBadgeText}>STEP 3 • 마무리</Text>
+              </View>
               <Text style={styles.mainMessage}>{timeMessage}</Text>
             </Animated.View>
 
@@ -145,6 +184,28 @@ export default function CompletionScreen() {
               )}
             </Animated.View>
 
+            {(memoryNarrative || themeWeight !== null) && (
+              <Animated.View
+                entering={FadeIn.duration(600).delay(900)}
+                style={styles.memoryCard}
+              >
+                <Text style={styles.memoryTitle}>Memory Contract</Text>
+                <Text style={styles.memoryLine}>
+                  completion_snapshot: {snapshotLine ?? `${recommendation.temperature.recommended}°C · ${recommendation.durationMinutes ?? '자유'}분 · ${recommendation.environmentUsed}`}
+                </Text>
+                {themeWeight !== null && recommendation.themeTitle ? (
+                  <Text style={styles.memoryLine}>
+                    theme_preference_weight: {recommendation.themeTitle} = {themeWeight}
+                  </Text>
+                ) : null}
+                {memoryNarrative ? (
+                  <Text style={styles.memoryLine}>narrative_recall_card: {memoryNarrative}</Text>
+                ) : null}
+              </Animated.View>
+            )}
+
+            <PersistentDisclosure style={styles.disclosureInline} />
+
             <Animated.View entering={FadeIn.duration(500).delay(1000)}>
               <TouchableOpacity
                 style={styles.homeButton}
@@ -194,6 +255,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 28,
     marginBottom: 24,
+  },
+  stepBadge: {
+    alignSelf: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    marginBottom: 10,
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: TEXT_SECONDARY,
   },
   statsCard: {
     flexDirection: 'row',
@@ -264,6 +340,31 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: TEXT_SECONDARY,
+  },
+  memoryCard: {
+    width: '100%',
+    backgroundColor: CARD_GLASS,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 18,
+    gap: 4,
+  },
+  memoryTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: TEXT_PRIMARY,
+  },
+  memoryLine: {
+    fontSize: 12,
+    color: TEXT_SECONDARY,
+    lineHeight: 16,
+  },
+  disclosureInline: {
+    width: '100%',
+    marginBottom: 14,
   },
   homeButton: {
     backgroundColor: ACCENT,
