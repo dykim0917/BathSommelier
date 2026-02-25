@@ -47,8 +47,16 @@ const REQUIRED_COMMON_KEYS: (keyof CommonEventProperties)[] = [
   'ts',
 ];
 
+const NULLABLE_COMMON_KEYS: (keyof CommonEventProperties)[] = [
+  'partial_bath_subtype',
+];
+
 function validateCommonProperties(payload: CommonEventProperties): void {
-  const missing = REQUIRED_COMMON_KEYS.filter((key) => payload[key] === undefined || payload[key] === null);
+  const missing = REQUIRED_COMMON_KEYS.filter((key) => {
+    if (payload[key] === undefined) return true;
+    if (payload[key] === null && !NULLABLE_COMMON_KEYS.includes(key)) return true;
+    return false;
+  });
   if (missing.length > 0) {
     console.warn('[analytics] missing common_properties', missing.join(', '));
   }
