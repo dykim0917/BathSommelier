@@ -17,6 +17,7 @@ import {
   TEXT_SECONDARY,
   TYPE_SCALE,
 } from '@/src/data/colors';
+import { copy } from '@/src/content/copy';
 
 interface SuggestionDetailModalProps {
   visible: boolean;
@@ -40,16 +41,18 @@ export function SuggestionDetailModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>{isTrip ? 'W08 • Trip Suggestion Detail' : 'W07 • Care Suggestion Detail'}</Text>
+          <Text style={styles.title}>
+            {isTrip ? copy.suggestion.titleTrip : copy.suggestion.titleCare}
+          </Text>
           <Text style={styles.subTitle}>{suggestion.title}</Text>
 
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
             {isTrip ? (
               <>
-                <Text style={styles.label}>Narrative</Text>
+                <Text style={styles.label}>{copy.suggestion.labels.narrative}</Text>
                 <Text style={styles.value}>{explanation.narrativeHeadline ?? '오늘의 테마 몰입 루틴입니다.'}</Text>
 
-                <Text style={styles.label}>Atmosphere</Text>
+                <Text style={styles.label}>{copy.suggestion.labels.atmosphere}</Text>
                 <View style={styles.chipsRow}>
                   {(explanation.atmosphereChips ?? []).map((chip) => (
                     <View key={chip} style={styles.chip}>
@@ -60,30 +63,30 @@ export function SuggestionDetailModal({
               </>
             ) : (
               <>
-                <Text style={styles.label}>State Label</Text>
+                <Text style={styles.label}>{copy.suggestion.labels.state}</Text>
                 <Text style={styles.value}>{explanation.stateLabel}</Text>
               </>
             )}
 
-            <Text style={styles.label}>Why</Text>
+            <Text style={styles.label}>{copy.suggestion.labels.why}</Text>
             <Text style={styles.value}>{explanation.whySummary}</Text>
 
-            <Text style={styles.label}>Routine Params</Text>
+            <Text style={styles.label}>{copy.suggestion.labels.params}</Text>
             <Text style={styles.value}>{explanation.routineParams}</Text>
 
-            <Text style={styles.label}>Expected Goal</Text>
+            <Text style={styles.label}>{copy.suggestion.labels.goal}</Text>
             <Text style={styles.value}>{explanation.expectedGoal}</Text>
 
-            <Text style={styles.label}>Alternative</Text>
+            <Text style={styles.label}>{copy.suggestion.labels.alternative}</Text>
             <Text style={styles.value}>{explanation.alternativeRoutine}</Text>
           </ScrollView>
 
           <View style={styles.buttonRow}>
             <Pressable style={styles.ghostButton} onPress={onClose}>
-              <Text style={styles.ghostText}>닫기</Text>
+              <Text style={styles.ghostText}>{copy.suggestion.cta.close}</Text>
             </Pressable>
             <Pressable style={styles.startButton} onPress={onStart}>
-              <Text style={styles.startText}>이 루틴으로 시작</Text>
+              <Text style={styles.startText}>{copy.suggestion.cta.start}</Text>
             </Pressable>
           </View>
         </View>

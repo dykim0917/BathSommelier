@@ -6,6 +6,7 @@ import {
   TEXT_MUTED,
   TYPE_CAPTION,
 } from '@/src/data/colors';
+import { copy } from '@/src/content/copy';
 
 interface PersistentDisclosureProps {
   style?: ViewStyle;
@@ -17,19 +18,14 @@ interface PersistentDisclosureProps {
 export function PersistentDisclosure({
   style,
   showColdWarning = false,
-  title = 'W18 • Legal/Safety Overlay',
+  title = copy.disclosure.title,
   lines,
 }: PersistentDisclosureProps) {
-  const baseLines = [
-    'BathSommelier는 의료 진단 또는 치료 서비스를 제공하지 않습니다.',
-    '개인 건강 상태에 따라 전문의 상담을 권장합니다.',
-  ];
+  const baseLines = [...copy.disclosure.baseLines];
 
   const renderedLines = lines ?? [
     ...baseLines,
-    ...(showColdWarning
-      ? ['냉수 샤워 금기군(조절되지 않는 고혈압/부정맥/뇌혈관 병력)은 반드시 회피하세요.']
-      : []),
+    ...(showColdWarning ? [copy.disclosure.coldWarning] : []),
   ];
 
   return (

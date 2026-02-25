@@ -14,6 +14,7 @@ import { useHaptic } from '@/src/hooks/useHaptic';
 import { BathEnvironment, HealthCondition } from '@/src/engine/types';
 import { clearProfile } from '@/src/storage/profile';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
+import { copy } from '@/src/content/copy';
 import {
   ACCENT,
   APP_BG_BOTTOM,
@@ -49,12 +50,12 @@ export default function SettingsScreen() {
 
   const handleResetOnboarding = () => {
     Alert.alert(
-      '프로필 초기화',
-      '프로필을 초기화하면 온보딩부터 다시 시작합니다.\n계속하시겠습니까?',
+      copy.settings.resetDialogTitle,
+      copy.settings.resetDialogBody,
       [
-        { text: '취소', style: 'cancel' },
+        { text: copy.settings.resetCancel, style: 'cancel' },
         {
-          text: '초기화',
+          text: copy.settings.resetConfirm,
           style: 'destructive',
           onPress: async () => {
             haptic.warning();
@@ -69,7 +70,7 @@ export default function SettingsScreen() {
   if (loading || !profile) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={{ color: TEXT_SECONDARY }}>로딩 중...</Text>
+        <Text style={{ color: TEXT_SECONDARY }}>{copy.settings.loading}</Text>
       </View>
     );
   }
@@ -83,15 +84,15 @@ export default function SettingsScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>내 프로필</Text>
+          <Text style={styles.sectionTitle}>{copy.settings.sectionProfile}</Text>
 
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>목욕 환경</Text>
+            <Text style={styles.infoLabel}>{copy.settings.environmentLabel}</Text>
             <Text style={styles.infoValue}>{ENV_LABELS[profile.bathEnvironment]}</Text>
           </View>
 
           <View style={styles.infoCardColumn}>
-            <Text style={styles.infoLabel}>건강 상태</Text>
+            <Text style={styles.infoLabel}>{copy.settings.healthLabel}</Text>
             <View style={styles.conditionsList}>
               {profile.healthConditions.map((c) => (
                 <Text key={c} style={styles.conditionTag}>{CONDITION_LABELS[c]}</Text>
@@ -101,22 +102,22 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>설정</Text>
+          <Text style={styles.sectionTitle}>{copy.settings.sectionActions}</Text>
 
           <TouchableOpacity style={styles.actionCard} onPress={handleResetOnboarding} activeOpacity={0.78}>
-            <Text style={styles.actionText}>프로필 다시 설정하기</Text>
+            <Text style={styles.actionText}>{copy.settings.resetProfile}</Text>
             <Text style={styles.actionArrow}>→</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>앱 정보</Text>
+          <Text style={styles.sectionTitle}>{copy.settings.sectionApp}</Text>
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>버전</Text>
+            <Text style={styles.infoLabel}>{copy.settings.versionLabel}</Text>
             <Text style={styles.infoValue}>3.2.0</Text>
           </View>
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>이름</Text>
+            <Text style={styles.infoLabel}>{copy.settings.nameLabel}</Text>
             <Text style={styles.infoValue}>Bath Sommelier</Text>
           </View>
           <PersistentDisclosure style={styles.disclosureInline} showColdWarning />

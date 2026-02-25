@@ -108,8 +108,8 @@ function buildPrimarySuggestion(
       id: 'home_primary_starter',
       rank: 'primary',
       mode: 'care',
-      title: '기본 Starter 루틴',
-      subtitle: '데이터가 부족해 안전한 기본 루틴으로 시작합니다.',
+      title: '기본 케어 루틴',
+      subtitle: '처음이라 안전한 기본 루틴부터 시작해요.',
       dailyTags: ['stress'],
     };
   }
@@ -119,8 +119,8 @@ function buildPrimarySuggestion(
       id: 'home_primary_safe_only',
       rank: 'primary',
       mode: 'care',
-      title: 'Safe Routine Only',
-      subtitle: '고위험군 감지로 보수적 루틴만 제공합니다.',
+      title: '안전 우선 루틴',
+      subtitle: '현재 상태를 고려해 안전한 루틴만 보여드려요.',
       dailyTags: ['stress'],
     };
   }
@@ -130,8 +130,8 @@ function buildPrimarySuggestion(
       id: 'home_primary_reset_safe',
       rank: 'primary',
       mode: 'care',
-      title: 'Reset (No Cold) 루틴',
-      subtitle: '안전 정책으로 냉수 단계 없이 리셋 루틴을 제공합니다.',
+      title: '전환 케어 루틴',
+      subtitle: '안전을 위해 냉수 단계 없이 진행해요.',
       dailyTags: ['stress'],
     };
   }
@@ -141,7 +141,7 @@ function buildPrimarySuggestion(
       id: 'home_primary_sleep',
       rank: 'primary',
       mode: 'care',
-      title: '수면 준비 Care 루틴',
+      title: '수면 준비 케어 루틴',
       subtitle: '긴장을 낮추고 취침 전 루틴을 준비해요.',
       dailyTags: TAGS_BY_MODE.sleep,
     };
@@ -152,7 +152,7 @@ function buildPrimarySuggestion(
       id: 'home_primary_reset',
       rank: 'primary',
       mode: 'care',
-      title: '리셋 Care 루틴',
+      title: '전환 케어 루틴',
       subtitle: '짧은 집중 전환 루틴으로 리듬을 바꿔요.',
       dailyTags: TAGS_BY_MODE.reset,
     };
@@ -162,7 +162,7 @@ function buildPrimarySuggestion(
     id: 'home_primary_recovery',
     rank: 'primary',
     mode: 'care',
-    title: '회복 Care 루틴',
+    title: '회복 케어 루틴',
     subtitle: '몸의 피로를 줄이는 기본 회복 루틴이에요.',
     dailyTags: TAGS_BY_MODE.recovery,
   };
@@ -187,7 +187,7 @@ function buildTripSecondary(selectedThemeId: ThemeId): HomeSuggestion {
     id: `home_secondary_trip_${selectedThemeId}`,
     rank: 'secondary_1',
     mode: 'trip',
-    title: '감성 Trip 루틴',
+    title: '분위기 트립 루틴',
     subtitle: '테마 몰입으로 분위기를 전환해요.',
     themeId: selectedThemeId,
   };
@@ -195,21 +195,21 @@ function buildTripSecondary(selectedThemeId: ThemeId): HomeSuggestion {
 
 function buildInsightStrip(fallback: FallbackStrategy, timeContext: TimeContext): string {
   if (fallback === 'DEFAULT_STARTER_RITUAL') {
-    return '초기 데이터가 적어 기본 스타터 루틴을 제안합니다.';
+    return '처음이라 기본 루틴을 먼저 보여드려요.';
   }
   if (fallback === 'SAFE_ROUTINE_ONLY') {
-    return '안전 정책이 우선되어 보수적 루틴만 노출됩니다.';
+    return '안전을 위해 보수적인 루틴만 보여드려요.';
   }
   if (fallback === 'RESET_WITHOUT_COLD') {
-    return '금기군 보호를 위해 냉수 단계가 자동 제외되었습니다.';
+    return '안전을 위해 냉수 단계는 자동으로 제외됐어요.';
   }
   if (fallback === 'ROUTINE_ONLY_NO_COMMERCE') {
-    return '상품 후보 부족으로 루틴 실행만 제공합니다.';
+    return '준비물 없이 루틴부터 시작할 수 있어요.';
   }
   if (timeContext === 'late_night') {
-    return '심야 시간대라 수면 준비 루틴을 우선 제공합니다.';
+    return '늦은 시간이라 수면 준비 루틴을 먼저 추천해요.';
   }
-  return '오늘은 Primary 1개와 보조 루틴 2개까지 제공합니다.';
+  return '오늘 상태에 맞춰 루틴을 추천했어요.';
 }
 
 export function buildHomeOrchestration(
@@ -245,9 +245,9 @@ export function buildHomeOrchestration(
     engineConflictResolved,
     primarySuggestion,
     secondarySuggestions: secondarySuggestions.slice(0, 2),
-    quickActions: ['빠른 시작', '기록 보기', '환경 변경'],
+    quickActions: ['바로 시작', '기록 보기', '환경 바꾸기'],
     insightStrip: engineConflictResolved
-      ? 'W13 정책: 엔진 충돌이 해소되어 Primary 1개만 노출됩니다.'
+      ? '조건이 겹칠 때는 더 안전한 루틴을 먼저 추천해요.'
       : buildInsightStrip(fallbackStrategy, input.timeContext),
     fallbackStrategy,
     priorityResolution: 'CARE_PRIMARY__TRIP_SECONDARY',

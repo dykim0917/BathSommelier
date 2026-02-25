@@ -1,4 +1,5 @@
 import { buildDisclosureLines } from '../disclosures';
+import { copy } from '@/src/content/copy';
 
 describe('disclosures', () => {
   test('includes base legal lines always', () => {
@@ -8,8 +9,8 @@ describe('disclosures', () => {
       healthConditions: ['none'],
     });
 
-    expect(lines[0]).toContain('의료 진단 또는 치료');
-    expect(lines[1]).toContain('전문의 상담');
+    expect(lines[0]).toContain(copy.disclosure.baseLines[0]);
+    expect(lines[1]).toContain(copy.disclosure.baseLines[1]);
   });
 
   test('includes reset cold contraindication line when reset mode/fallback', () => {
@@ -19,7 +20,7 @@ describe('disclosures', () => {
       healthConditions: ['none'],
     });
 
-    expect(lines.some((line) => line.includes('냉수 샤워 금기군'))).toBe(true);
+    expect(lines.some((line) => line.includes(copy.disclosure.coldWarning))).toBe(true);
   });
 
   test('includes conflict resolution line when engine conflict resolved', () => {
@@ -30,6 +31,6 @@ describe('disclosures', () => {
       engineConflictResolved: true,
     });
 
-    expect(lines.some((line) => line.includes('Primary 제안 1개'))).toBe(true);
+    expect(lines.some((line) => line.includes(copy.disclosure.conflictResolved))).toBe(true);
   });
 });

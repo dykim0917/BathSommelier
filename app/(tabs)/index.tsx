@@ -63,6 +63,12 @@ import {
 import { ProductMatchingModal } from '@/src/components/ProductMatchingModal';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { buildDisclosureLines } from '@/src/engine/disclosures';
+import { copy } from '@/src/content/copy';
+import {
+  toUserFacingFallbackLabel,
+  toUserFacingModeHint,
+  toUserFacingRankLabel,
+} from '@/src/engine/copyMappers';
 
 const ACTIVE_STATE_OPTIONS: { id: ActiveState; label: string }[] = [
   { id: 'tension', label: '긴장되어 있어요' },
@@ -79,9 +85,9 @@ const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
 ];
 
 const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
-  { id: 'kyoto_forest', label: 'Kyoto' },
-  { id: 'rainy_camping', label: 'Rainy' },
-  { id: 'midnight_paris', label: 'Paris' },
+  { id: 'kyoto_forest', label: '교토 숲' },
+  { id: 'rainy_camping', label: '비 오는 캠핑' },
+  { id: 'midnight_paris', label: '미드나잇 파리' },
 ];
 
 function getTimeContext(date = new Date()): TimeContext {
@@ -126,21 +132,6 @@ function hasProductCandidates(
   if (environment === 'shower' && mode === 'sleep') return false;
   if (environment === 'partial_bath' && mode === 'reset') return false;
   return true;
-}
-
-function getFallbackHeadline(fallback: string): string {
-  switch (fallback) {
-    case 'DEFAULT_STARTER_RITUAL':
-      return 'W02 • Starter Ritual 상태';
-    case 'SAFE_ROUTINE_ONLY':
-      return 'W03 • Safe Routine Only 상태';
-    case 'RESET_WITHOUT_COLD':
-      return 'W05 • Reset without Cold 상태';
-    case 'ROUTINE_ONLY_NO_COMMERCE':
-      return 'W06 • Routine Only 상태';
-    default:
-      return 'W01 • Home default 상태';
-  }
 }
 
 export default function HomeOrchestrationScreen() {
@@ -405,26 +396,31 @@ export default function HomeOrchestrationScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
-          <Text style={styles.title}>오늘의 오케스트레이션</Text>
-          <Text style={styles.subtitle}>오늘 신호: {orchestration.todaySignal}</Text>
-          <Text style={styles.priorityText}>Resolution: {orchestration.priorityResolution}</Text>
+          <Text style={styles.title}>{copy.home.title}</Text>
+          <Text style={styles.subtitle}>{copy.home.subtitlePrefix} {orchestration.todaySignal}</Text>
+          <Text style={styles.priorityText}>
+            {toUserFacingModeHint(
+              orchestration.selectedMode,
+              orchestration.engineConflictResolved
+            )}
+          </Text>
         </View>
 
         <View style={styles.fallbackBanner}>
-          <Text style={styles.fallbackTitle}>{getFallbackHeadline(orchestration.fallbackStrategy)}</Text>
+          <Text style={styles.fallbackTitle}>
+            {toUserFacingFallbackLabel(orchestration.fallbackStrategy)}
+          </Text>
           <Text style={styles.fallbackText}>{orchestration.insightStrip}</Text>
           {isEngineConflictResolved ? (
-            <Text style={styles.lateNightBadge}>
-              W13 • Engine conflict resolved (Primary only)
-            </Text>
+            <Text style={styles.lateNightBadge}>{copy.home.conflictBadge}</Text>
           ) : null}
           {isLateNightSleepPriority ? (
-            <Text style={styles.lateNightBadge}>W04 • Late-night sleep priority 적용</Text>
+            <Text style={styles.lateNightBadge}>{copy.home.lateNightBadge}</Text>
           ) : null}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today Signal</Text>
+          <Text style={styles.sectionTitle}>{copy.home.sections.signal}</Text>
           <View style={styles.chipWrap}>
             {ACTIVE_STATE_OPTIONS.map((option) => (
               <Pressable
@@ -446,7 +442,7 @@ export default function HomeOrchestrationScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Environment</Text>
+          <Text style={styles.sectionTitle}>{copy.home.sections.environment}</Text>
           <View style={styles.row}>
             {ENV_OPTIONS.map((option) => (
               <Pressable
@@ -463,7 +459,7 @@ export default function HomeOrchestrationScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trip Theme (Secondary)</Text>
+          <Text style={styles.sectionTitle}>{copy.home.sections.tripTheme}</Text>
           <View style={styles.row}>
             {THEME_OPTIONS.map((option) => (
               <Pressable
@@ -478,7 +474,7 @@ export default function HomeOrchestrationScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Suggestions</Text>
+          <Text style={styles.sectionTitle}>{copy.home.sections.suggestions}</Text>
           {suggestions.map((suggestion) => (
             <Pressable
               key={suggestion.id}
@@ -488,18 +484,18 @@ export default function HomeOrchestrationScreen() {
               ]}
               onPress={() => handleOpenSuggestion(suggestion)}
             >
-              <Text style={styles.rankText}>{suggestion.rank}</Text>
+              <Text style={styles.rankText}>{toUserFacingRankLabel(suggestion.rank)}</Text>
               <Text style={styles.suggestionTitle}>{suggestion.title}</Text>
               <Text style={styles.suggestionSub}>{suggestion.subtitle}</Text>
               {orchestration.fallbackStrategy === 'RESET_WITHOUT_COLD' ? (
-                <Text style={styles.safeHint}>냉수 단계는 안전 정책으로 비활성화됩니다.</Text>
+                <Text style={styles.safeHint}>{copy.home.resetSafeHint}</Text>
               ) : null}
             </Pressable>
           ))}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>{copy.home.sections.quickActions}</Text>
           <View style={styles.row}>
             {orchestration.quickActions.map((action) => (
               <View key={action} style={styles.quickActionPill}>
@@ -511,7 +507,7 @@ export default function HomeOrchestrationScreen() {
             <Text style={styles.insightText}>{orchestration.insightStrip}</Text>
             {showCommerceNotice ? (
               <Text style={styles.commerceHiddenText}>
-                상품 후보가 없어 W06 상태로 루틴 실행만 제공합니다.
+                {copy.home.noCommerceNotice}
               </Text>
             ) : null}
           </View>

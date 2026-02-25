@@ -15,6 +15,7 @@ import { buildHistoryInsights } from '@/src/engine/historyInsights';
 import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { formatDuration } from '@/src/utils/time';
 import { THEME_BY_ID } from '@/src/data/themes';
+import { copy } from '@/src/content/copy';
 import {
   APP_BG_BOTTOM,
   APP_BG_TOP,
@@ -38,8 +39,8 @@ const BATH_TYPE_LABELS: Record<string, string> = {
 };
 
 const MODE_LABELS = {
-  care: 'CARE',
-  trip: 'TRIP',
+  care: copy.history.cardLabels.modeCare,
+  trip: copy.history.cardLabels.modeTrip,
 } as const;
 
 const ENV_LABELS = {
@@ -104,7 +105,7 @@ export default function HistoryScreen() {
         <View style={styles.cardContent}>
           <View style={styles.titleRow}>
             <Text style={styles.cardTitle}>
-              {item.themeTitle ?? persona?.nameKo ?? '맞춤 케어'}
+              {item.themeTitle ?? persona?.nameKo ?? copy.history.cardLabels.defaultTitle}
             </Text>
             <View
               style={[
@@ -121,11 +122,15 @@ export default function HistoryScreen() {
           <Text style={styles.cardMeta}>
             {item.temperature.recommended}°C · {BATH_TYPE_LABELS[item.bathType]} · {formatDuration(item.durationMinutes)}
           </Text>
-          <Text style={styles.cardSubMeta}>환경: {ENV_LABELS[item.environmentUsed]}</Text>
+          <Text style={styles.cardSubMeta}>
+            {copy.history.cardLabels.environmentPrefix} {ENV_LABELS[item.environmentUsed]}
+          </Text>
           {memory ? (
             <>
               {memory.themeId ? (
-                <Text style={styles.memoryMeta}>선호 가중치: {memory.themePreferenceWeight}</Text>
+                <Text style={styles.memoryMeta}>
+                  {copy.history.cardLabels.weightPrefix} {memory.themePreferenceWeight}
+                </Text>
               ) : null}
               <Text style={styles.memoryRecall}>{memory.narrativeRecallCard}</Text>
             </>
@@ -146,8 +151,8 @@ export default function HistoryScreen() {
       {history.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>📋</Text>
-          <Text style={styles.emptyText}>아직 기록이 없어요</Text>
-          <Text style={styles.emptySubtext}>첫 번째 목욕 레시피를 받아보세요</Text>
+          <Text style={styles.emptyText}>{copy.history.empty.title}</Text>
+          <Text style={styles.emptySubtext}>{copy.history.empty.subtitle}</Text>
         </View>
       ) : (
         <FlatList
@@ -157,32 +162,43 @@ export default function HistoryScreen() {
           ListHeaderComponent={
             <View style={styles.insightCard}>
               <View style={styles.insightHeaderRow}>
-                <Text style={styles.insightTitle}>W17 • History Insight Expanded</Text>
+                <Text style={styles.insightTitle}>{copy.history.title}</Text>
                 <Pressable
                   style={styles.expandButton}
                   onPress={() => setIsInsightExpanded((prev) => !prev)}
                 >
-                  <Text style={styles.expandButtonText}>{isInsightExpanded ? '접기' : '펼치기'}</Text>
+                  <Text style={styles.expandButtonText}>
+                    {isInsightExpanded ? copy.history.collapse : copy.history.expand}
+                  </Text>
                 </Pressable>
               </View>
               <Text style={styles.insightLine}>
-                총 세션: {insights.totalSessions} · CARE {insights.careSessions} · TRIP {insights.tripSessions}
+                {copy.history.summary.sessions}: {insights.totalSessions} ·{' '}
+                {copy.history.summary.care} {insights.careSessions} ·{' '}
+                {copy.history.summary.trip} {insights.tripSessions}
               </Text>
               <Text style={styles.insightLine}>
-                평균 실행 시간: {insights.avgDurationMinutes > 0 ? `${insights.avgDurationMinutes}분` : '데이터 준비 중'}
+                {copy.history.summary.avgDuration}:{' '}
+                {insights.avgDurationMinutes > 0
+                  ? `${insights.avgDurationMinutes}분`
+                  : copy.history.summary.noData}
               </Text>
               <Text style={styles.insightLine}>
-                최다 환경: {insights.topEnvironment ? ENV_LABELS[insights.topEnvironment] : '데이터 없음'}
+                {copy.history.summary.topEnvironment}:{' '}
+                {insights.topEnvironment
+                  ? ENV_LABELS[insights.topEnvironment]
+                  : copy.history.summary.noData}
               </Text>
               <Text style={styles.insightLine}>
-                완료 메모리 누적: {memoryHistory.length}건
+                {copy.history.summary.memoryCount}: {memoryHistory.length}건
               </Text>
               {topThemeInsight ? (
                 <Text style={styles.insightLine}>
-                  최다 선호 테마: {topThemeInsight.themeTitle} ({topThemeInsight.weight})
+                  {copy.history.summary.topTheme}: {topThemeInsight.themeTitle} (
+                  {topThemeInsight.weight})
                 </Text>
               ) : (
-                <Text style={styles.insightLine}>아직 선호 테마 데이터가 없습니다.</Text>
+                <Text style={styles.insightLine}>{copy.history.summary.noTheme}</Text>
               )}
               {isInsightExpanded && insights.recentRecalls.length > 0 ? (
                 <View style={styles.recallList}>
@@ -192,7 +208,9 @@ export default function HistoryScreen() {
                       style={styles.recallCard}
                       onPress={() => router.push(`/result/recipe/${recall.recommendationId}`)}
                     >
-                      <Text style={styles.recallTitle}>Recall {index + 1}</Text>
+                      <Text style={styles.recallTitle}>
+                        {copy.history.recallTitlePrefix} {index + 1}
+                      </Text>
                       <Text style={styles.insightRecall}>{recall.text}</Text>
                     </Pressable>
                   ))}
@@ -200,7 +218,7 @@ export default function HistoryScreen() {
               ) : null}
               {isInsightExpanded && latestMemory && insights.recentRecalls.length === 0 ? (
                 <Text style={styles.insightRecall}>
-                  최근 recall: {latestMemory.narrativeRecallCard}
+                  {copy.history.recallTitlePrefix}: {latestMemory.narrativeRecallCard}
                 </Text>
               ) : null}
             </View>

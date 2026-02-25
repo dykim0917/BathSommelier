@@ -15,6 +15,7 @@ import { applyFeedbackToThemePreference, saveCompletionMemory } from '@/src/stor
 import { getTimeBasedMessage } from '@/src/utils/messages';
 import { GradientBackground } from '@/src/components/GradientBackground';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
+import { copy } from '@/src/content/copy';
 import {
   BG,
   CARD_BORDER_SOFT,
@@ -26,6 +27,20 @@ import {
   TEXT_SECONDARY,
   ACCENT,
 } from '@/src/data/colors';
+
+function toEnvironmentLabel(environment: string): string {
+  switch (environment) {
+    case 'bathtub':
+      return '욕조';
+    case 'partial_bath':
+    case 'footbath':
+      return '부분입욕';
+    case 'shower':
+      return '샤워';
+    default:
+      return environment;
+  }
+}
 
 export default function CompletionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -65,7 +80,7 @@ export default function CompletionScreen() {
           memory.completionSnapshot.durationMinutes !== null
             ? `${memory.completionSnapshot.durationMinutes}분`
             : '시간 자유'
-        } · ${memory.completionSnapshot.environment} · ${new Date(
+        } · ${toEnvironmentLabel(memory.completionSnapshot.environment)} · ${new Date(
           memory.completionSnapshot.completedAt
         ).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 완료`
       );
@@ -93,15 +108,15 @@ export default function CompletionScreen() {
   if (!recommendation) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={{ color: TEXT_SECONDARY }}>로딩 중...</Text>
+        <Text style={{ color: TEXT_SECONDARY }}>{copy.completion.loading}</Text>
       </View>
     );
   }
 
   const timeMessage = getTimeBasedMessage();
   const feedbackTitle = recommendation.themeTitle
-    ? `오늘의 ${recommendation.themeTitle} 어떠셨나요?`
-    : '오늘의 목욕은 어떠셨나요?';
+    ? `${copy.completion.feedbackTitleWithThemePrefix} ${recommendation.themeTitle} ${copy.completion.feedbackTitleWithThemeSuffix}`
+    : copy.completion.feedbackTitleDefault;
 
   return (
     <View style={styles.container}>
@@ -121,7 +136,7 @@ export default function CompletionScreen() {
 
             <Animated.View entering={FadeIn.duration(600).delay(400)}>
               <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>STEP 3 • 마무리</Text>
+                <Text style={styles.stepBadgeText}>{copy.routine.stepFinish}</Text>
               </View>
               <Text style={styles.mainMessage}>{timeMessage}</Text>
             </Animated.View>
@@ -132,7 +147,11 @@ export default function CompletionScreen() {
             >
               <Text style={styles.statsEmoji}>📊</Text>
               <Text style={styles.statsText}>
-                이번 달 <Text style={[styles.statsHighlight, { color: recommendation.colorHex }]}>{monthlyCount}번째</Text> 힐링 완료
+                {copy.completion.monthlyPrefix}{' '}
+                <Text style={[styles.statsHighlight, { color: recommendation.colorHex }]}>
+                  {monthlyCount}
+                </Text>
+                {copy.completion.monthlySuffix}
               </Text>
             </Animated.View>
 
@@ -155,7 +174,7 @@ export default function CompletionScreen() {
                   disabled={feedback !== null}
                 >
                   <Text style={styles.feedbackEmoji}>👍</Text>
-                  <Text style={styles.feedbackLabel}>좋아요</Text>
+                  <Text style={styles.feedbackLabel}>{copy.completion.feedback.good}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -171,7 +190,7 @@ export default function CompletionScreen() {
                   disabled={feedback !== null}
                 >
                   <Text style={styles.feedbackEmoji}>👎</Text>
-                  <Text style={styles.feedbackLabel}>별로예요</Text>
+                  <Text style={styles.feedbackLabel}>{copy.completion.feedback.bad}</Text>
                 </TouchableOpacity>
               </View>
               {feedback && (
@@ -179,7 +198,7 @@ export default function CompletionScreen() {
                   entering={FadeIn.duration(300)}
                   style={styles.feedbackThanks}
                 >
-                  피드백 감사합니다!
+                  {copy.completion.feedback.thanks}
                 </Animated.Text>
               )}
             </Animated.View>
@@ -189,17 +208,19 @@ export default function CompletionScreen() {
                 entering={FadeIn.duration(600).delay(900)}
                 style={styles.memoryCard}
               >
-                <Text style={styles.memoryTitle}>Memory Contract</Text>
+                <Text style={styles.memoryTitle}>{copy.completion.memoryTitle}</Text>
                 <Text style={styles.memoryLine}>
-                  completion_snapshot: {snapshotLine ?? `${recommendation.temperature.recommended}°C · ${recommendation.durationMinutes ?? '자유'}분 · ${recommendation.environmentUsed}`}
+                  {copy.completion.memoryLabels.snapshot}: {snapshotLine ?? `${recommendation.temperature.recommended}°C · ${recommendation.durationMinutes ?? '자유'}분 · ${toEnvironmentLabel(recommendation.environmentUsed)}`}
                 </Text>
                 {themeWeight !== null && recommendation.themeTitle ? (
                   <Text style={styles.memoryLine}>
-                    theme_preference_weight: {recommendation.themeTitle} = {themeWeight}
+                    {copy.completion.memoryLabels.weight}: {recommendation.themeTitle} {themeWeight}
                   </Text>
                 ) : null}
                 {memoryNarrative ? (
-                  <Text style={styles.memoryLine}>narrative_recall_card: {memoryNarrative}</Text>
+                  <Text style={styles.memoryLine}>
+                    {copy.completion.memoryLabels.recall}: {memoryNarrative}
+                  </Text>
                 ) : null}
               </Animated.View>
             )}
@@ -212,7 +233,7 @@ export default function CompletionScreen() {
                 onPress={handleGoHome}
                 activeOpacity={0.8}
               >
-                <Text style={styles.homeButtonText}>홈으로</Text>
+                <Text style={styles.homeButtonText}>{copy.completion.homeCta}</Text>
               </TouchableOpacity>
             </Animated.View>
           </View>

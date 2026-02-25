@@ -10,6 +10,7 @@ import {
   TEXT_SECONDARY,
   TYPE_SCALE,
 } from '@/src/data/colors';
+import { copy } from '@/src/content/copy';
 
 interface ProductMatchingModalProps {
   visible: boolean;
@@ -32,32 +33,32 @@ export function ProductMatchingModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>W09 • Product Matching Result</Text>
-          <Text style={styles.subTitle}>환경 필터 + 슬롯 A/B/C 조합</Text>
+          <Text style={styles.title}>{copy.product.title}</Text>
+          <Text style={styles.subTitle}>{copy.product.subtitle}</Text>
 
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
             {items.map((item) => (
               <View key={`${item.slot}_${item.ingredient.id}`} style={styles.slotCard}>
                 <View style={styles.rowBetween}>
-                  <Text style={styles.slotTitle}>Slot {item.slot}</Text>
+                  <Text style={styles.slotTitle}>{copy.product.slotTitle[item.slot]}</Text>
                   {item.sommelierPick ? (
                     <View style={styles.pickBadge}>
-                      <Text style={styles.pickBadgeText}>Sommelier Pick</Text>
+                      <Text style={styles.pickBadgeText}>{copy.product.pickBadge}</Text>
                     </View>
                   ) : null}
                 </View>
 
                 <Text style={styles.productName}>{item.ingredient.nameKo}</Text>
-                <Text style={styles.metaText}>기전: {item.mechanism}</Text>
-                <Text style={styles.metaText}>가격대: {item.priceTier}</Text>
-                <Text style={styles.reasonText}>{item.reason}</Text>
+                <Text style={styles.metaText}>{copy.product.labels.mechanism}: {item.reason}</Text>
+                <Text style={styles.metaText}>{copy.product.labels.priceTier}: {item.priceTier}</Text>
+                <Text style={styles.reasonText}>{item.ingredient.description}</Text>
 
                 <View style={styles.buttonRow}>
                   <Pressable style={styles.ghostButton} onPress={() => onProductPress(item)}>
-                    <Text style={styles.ghostText}>상세 보기</Text>
+                    <Text style={styles.ghostText}>{copy.product.cta.detail}</Text>
                   </Pressable>
                   <Pressable style={styles.linkButton} onPress={() => onPurchasePress(item)}>
-                    <Text style={styles.linkText}>구매 링크</Text>
+                    <Text style={styles.linkText}>{copy.product.cta.purchase}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -66,10 +67,10 @@ export function ProductMatchingModal({
 
           <View style={styles.footerRow}>
             <Pressable style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeText}>닫기</Text>
+              <Text style={styles.closeText}>{copy.product.cta.close}</Text>
             </Pressable>
             <Pressable style={styles.continueButton} onPress={onContinue}>
-              <Text style={styles.continueText}>루틴 계속</Text>
+              <Text style={styles.continueText}>{copy.product.cta.continue}</Text>
             </Pressable>
           </View>
         </View>

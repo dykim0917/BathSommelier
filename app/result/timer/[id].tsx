@@ -26,6 +26,7 @@ import { AudioMixer } from '@/src/components/AudioMixer';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { buildDisclosureLines } from '@/src/engine/disclosures';
 import { useDualAudioPlayer } from '@/src/hooks/useDualAudioPlayer';
+import { copy } from '@/src/content/copy';
 import {
   APP_BG_BOTTOM,
   APP_BG_TOP,
@@ -174,7 +175,7 @@ export default function TimerScreen() {
   if (!recommendation) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={{ color: TEXT_SECONDARY }}>로딩 중...</Text>
+        <Text style={{ color: TEXT_SECONDARY }}>{copy.completion.loading}</Text>
       </View>
     );
   }
@@ -215,7 +216,7 @@ export default function TimerScreen() {
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.timerContainer}>
             <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>STEP 2 • 실행</Text>
+              <Text style={styles.stepBadgeText}>{copy.routine.stepRun}</Text>
             </View>
             <Text style={styles.timerText}>{timeStr}</Text>
             {isPaused && (
@@ -224,7 +225,7 @@ export default function TimerScreen() {
                 exiting={FadeOut.duration(200)}
                 style={styles.pausedLabel}
               >
-                일시정지
+                {copy.routine.timerPaused}
               </Animated.Text>
             )}
           </View>
@@ -249,7 +250,7 @@ export default function TimerScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={styles.controlButtonText}>
-                      {isPaused ? '▶️ 재개' : '⏸ 일시정지'}
+                      {isPaused ? copy.routine.timerResume : copy.routine.timerPause}
                     </Text>
                   </TouchableOpacity>
 
@@ -264,7 +265,7 @@ export default function TimerScreen() {
             onPress={handleComplete}
             activeOpacity={0.85}
           >
-            <Text style={styles.finishButtonText}>끝내기</Text>
+            <Text style={styles.finishButtonText}>{copy.routine.timerFinish}</Text>
           </TouchableOpacity>
 
           <View style={styles.disclosureWrap}>

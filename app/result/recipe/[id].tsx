@@ -15,6 +15,7 @@ import { GradientBackground } from '@/src/components/GradientBackground';
 import { PersonaCard } from '@/src/components/PersonaCard';
 import { IngredientCarousel } from '@/src/components/IngredientCarousel';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
+import { copy } from '@/src/content/copy';
 import {
   BG,
   CARD_BORDER_SOFT,
@@ -42,7 +43,7 @@ export default function RecipeScreen() {
   if (!recommendation) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={{ color: TEXT_SECONDARY }}>로딩 중...</Text>
+        <Text style={{ color: TEXT_SECONDARY }}>{copy.completion.loading}</Text>
       </View>
     );
   }
@@ -51,7 +52,10 @@ export default function RecipeScreen() {
     router.replace(`/result/timer/${id}`);
   };
 
-  const modeLabel = recommendation.mode === 'trip' ? 'Trip Mode' : 'Care Mode';
+  const modeLabel =
+    recommendation.mode === 'trip'
+      ? '트립 · 분위기 전환 루틴'
+      : '케어 · 몸 상태에 맞춘 루틴';
   const compact = height < 780;
 
   return (
@@ -72,7 +76,7 @@ export default function RecipeScreen() {
 
           <Animated.View entering={FadeIn.duration(450)} style={styles.modeRow}>
             <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>STEP 1 • 준비</Text>
+              <Text style={styles.stepBadgeText}>{copy.routine.stepPrep}</Text>
             </View>
             <View style={[styles.modeBadge, { borderColor: recommendation.colorHex }]}>
               <Text style={[styles.modeBadgeText, { color: recommendation.colorHex }]}>{modeLabel}</Text>
@@ -104,17 +108,17 @@ export default function RecipeScreen() {
             style={[styles.bottomSection, compact && styles.bottomSectionCompact]}
           >
             <View style={styles.safetyBlock}>
-              <Text style={styles.safetyTitle}>안전 가이드</Text>
-              <Text style={styles.safetyText}>• 38~40°C 권장 (수면 루틴은 38~41°C)</Text>
-              <Text style={styles.safetyText}>• 10~15분 권장, 이상 증상 시 즉시 중단</Text>
-              <Text style={styles.safetyText}>• 음주 직후 사용 금지</Text>
+              <Text style={styles.safetyTitle}>{copy.routine.safetyTitle}</Text>
+              {copy.routine.safetyLines.map((line) => (
+                <Text key={line} style={styles.safetyText}>• {line}</Text>
+              ))}
             </View>
             <TouchableOpacity
               style={[styles.startButton, { backgroundColor: recommendation.colorHex }]}
               onPress={handleStartBath}
               activeOpacity={0.8}
             >
-              <Text style={styles.startButtonText}>입욕 시작</Text>
+              <Text style={styles.startButtonText}>{copy.routine.startCta}</Text>
             </TouchableOpacity>
             <PersistentDisclosure />
           </Animated.View>
