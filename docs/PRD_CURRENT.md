@@ -3,6 +3,7 @@
 버전: v3.10.2 (Target UX Spec)  
 기준일: 2026-02-13  
 문서 목적: 목표형 제품 요구사항 + 개인화 학습 + 커머스 검증 + 법적 완충 구조를 통합 정의하며, PMF 검증 우선 순서(가설-실험-판단)를 상위 원칙으로 고정한다. Home 오케스트레이션 레이어를 중심으로 Care/Trip 엔진 및 ProductHub 구조를 정밀화하되 의료적 진단/치료 주장으로 해석될 표현은 금지한다.
+알고리즘 세부 분기 초안(RFC): `/Users/exem/DK/BathSommelier/docs/ALGO_CARE_BRANCHING_RFC.md` (UI 미반영, 충돌 검토 전용)
 
 ## 1. 제품 핵심가치
 BathSommelier의 핵심은 다음 한 문장으로 정의한다.
