@@ -1,37 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet, Linking } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 import {
-  ActiveState,
   BathEnvironment,
   BathRecommendation,
   DailyTag,
-  HomeSuggestion,
+  FallbackStrategy,
+  HomeModeType,
+  HomeSuggestionRank,
+  IntentCard,
+  SubProtocolOption,
   ThemeId,
   TimeContext,
   UserProfile,
 } from '@/src/engine/types';
-import {
-  buildHomeOrchestration,
-  buildSuggestionExplanation,
-  normalizeEnvironmentInput,
-  selectModeByPolicy,
-} from '@/src/engine/homeOrchestration';
-import {
-  generateCareRecommendation,
-  generateTripRecommendation,
-} from '@/src/engine/recommend';
+import { generateCareRecommendation, generateTripRecommendation } from '@/src/engine/recommend';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useHaptic } from '@/src/hooks/useHaptic';
-import { saveRecommendation } from '@/src/storage/history';
+import { loadHistory, saveRecommendation } from '@/src/storage/history';
 import { loadLastEnvironment, saveLastEnvironment } from '@/src/storage/environment';
 import { SafetyWarning } from '@/src/components/SafetyWarning';
 import {
   ACCENT,
-  BTN_PRIMARY,
-  BTN_PRIMARY_TEXT,
   CARD_BORDER,
   CARD_SHADOW,
   CARD_SURFACE,
@@ -43,40 +35,26 @@ import {
   WARNING_COLOR,
 } from '@/src/data/colors';
 import {
-  CommerceEventPayload,
   RecommendationCardEventPayload,
-  trackAffiliateLinkClick,
-  trackProductDetailView,
-  trackRecommendationCardClick,
-  trackRecommendationCardImpression,
+  trackIntentCardClick,
+  trackIntentCardImpression,
   trackRoutineStart,
-  trackSommelierPickClick,
-  trackRoutineStartedAfterWhy,
-  trackTripNarrativeEngaged,
-  trackWhyExplainerExposed,
+  trackRoutineStartAfterSubprotocol,
+  trackSubprotocolModalOpen,
+  trackSubprotocolSelected,
 } from '@/src/analytics/events';
-import { SuggestionDetailModal } from '@/src/components/SuggestionDetailModal';
-import {
-  buildProductMatchingSlots,
-  ProductMatchItem,
-} from '@/src/engine/productMatching';
-import { ProductMatchingModal } from '@/src/components/ProductMatchingModal';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { buildDisclosureLines } from '@/src/engine/disclosures';
-import { copy } from '@/src/content/copy';
+import { SubProtocolPickerModal } from '@/src/components/SubProtocolPickerModal';
 import {
-  toUserFacingFallbackLabel,
-  toUserFacingModeHint,
-  toUserFacingRankLabel,
-} from '@/src/engine/copyMappers';
-
-const ACTIVE_STATE_OPTIONS: { id: ActiveState; label: string }[] = [
-  { id: 'tension', label: '긴장되어 있어요' },
-  { id: 'heavy', label: '몸이 무거워요' },
-  { id: 'cant_sleep', label: '잠이 안 와요' },
-  { id: 'low_mood', label: '기분이 가라앉았어요' },
-  { id: 'want_reset', label: '리셋하고 싶어요' },
-];
+  CARE_INTENT_CARDS,
+  CARE_SUBPROTOCOL_OPTIONS,
+  getEnvironmentSubtitle,
+  getSectionOrderByContext,
+  TRIP_INTENT_CARDS,
+  TRIP_SUBPROTOCOL_OPTIONS,
+} from '@/src/data/intents';
+import { applySubProtocolOverrides } from '@/src/engine/subprotocol';
 
 const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
   { id: 'bathtub', emoji: '🛁', label: '욕조' },
@@ -84,11 +62,18 @@ const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
   { id: 'shower', emoji: '🚿', label: '샤워' },
 ];
 
-const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
-  { id: 'kyoto_forest', label: '교토 숲' },
-  { id: 'rainy_camping', label: '비 오는 캠핑' },
-  { id: 'midnight_paris', label: '미드나잇 파리' },
-];
+const ENV_LABEL: Record<string, string> = {
+  bathtub: '욕조',
+  partial_bath: '부분입욕',
+  shower: '샤워',
+};
+
+const SCREEN_HORIZONTAL_PADDING = 22;
+const SECTION_GAP = 18;
+const CARD_GAP = 12;
+const SECTION_HORIZONTAL_PADDING = 16;
+const CARD_MIN_HEIGHT_COMPACT = 126;
+const CARD_MIN_HEIGHT_REGULAR = 142;
 
 function getTimeContext(date = new Date()): TimeContext {
   const h = date.getHours();
@@ -98,8 +83,12 @@ function getTimeContext(date = new Date()): TimeContext {
   return 'evening';
 }
 
+function normalizeEnvironmentInput(environment: BathEnvironment): 'bathtub' | 'partial_bath' | 'shower' {
+  if (environment === 'footbath') return 'partial_bath';
+  return environment;
+}
+
 function toEngineEnvironment(environment: BathEnvironment): BathEnvironment {
-  // Existing engine path still uses `footbath`; map `partial_bath` for compatibility.
   if (environment === 'partial_bath') return 'footbath';
   return environment;
 }
@@ -125,98 +114,165 @@ function buildRuntimeProfile(
   };
 }
 
-function hasProductCandidates(
-  mode: 'sleep' | 'recovery' | 'reset',
-  environment: BathEnvironment
-): boolean {
-  if (environment === 'shower' && mode === 'sleep') return false;
-  if (environment === 'partial_bath' && mode === 'reset') return false;
-  return true;
+function mapIntentToTags(intentId: string): DailyTag[] {
+  switch (intentId) {
+    case 'muscle_relief':
+      return ['muscle_pain'];
+    case 'sleep_ready':
+      return ['insomnia'];
+    case 'hangover_relief':
+      return ['hangover'];
+    case 'edema_relief':
+      return ['swelling'];
+    default:
+      return ['stress'];
+  }
 }
 
-export default function HomeOrchestrationScreen() {
+function mapIntentToTheme(intentId: string): ThemeId {
+  switch (intentId) {
+    case 'kyoto_forest':
+    case 'nordic_sauna':
+    case 'rainy_camping':
+    case 'snow_cabin':
+      return intentId;
+    default:
+      return 'kyoto_forest';
+  }
+}
+
+function mapIntentToActiveState(intentId: string): RecommendationCardEventPayload['active_state'] {
+  switch (intentId) {
+    case 'sleep_ready':
+      return 'cant_sleep';
+    case 'hangover_relief':
+      return 'want_reset';
+    case 'muscle_relief':
+    case 'edema_relief':
+      return 'heavy';
+    default:
+      return 'low_mood';
+  }
+}
+
+function mapCardPositionToRank(position: number): HomeSuggestionRank {
+  if (position === 1) return 'primary';
+  if (position === 2) return 'secondary_1';
+  return 'secondary_2';
+}
+
+function hasHighRiskCondition(conditions: UserProfile['healthConditions']): boolean {
+  return conditions.some((condition) => ['hypertension_heart', 'pregnant'].includes(condition));
+}
+
+function hasResetContraindication(conditions: UserProfile['healthConditions']): boolean {
+  return conditions.some((condition) => ['hypertension_heart', 'pregnant', 'diabetes'].includes(condition));
+}
+
+function resolveFallback(intent: IntentCard, healthConditions: UserProfile['healthConditions']): FallbackStrategy {
+  if (hasHighRiskCondition(healthConditions)) return 'SAFE_ROUTINE_ONLY';
+  if (intent.intent_id === 'hangover_relief' && hasResetContraindication(healthConditions)) {
+    return 'RESET_WITHOUT_COLD';
+  }
+  return 'none';
+}
+
+function buildHeadlineMessage(timeContext: TimeContext, recent: BathRecommendation[]): string {
+  if (timeContext === 'late_night') {
+    return '지금은 잠들기 준비 시간이네요.';
+  }
+
+  const latest = recent[0];
+  if (latest?.mode === 'trip') {
+    return '오늘은 분위기 전환 루틴부터 시작해볼까요?';
+  }
+
+  if (timeContext === 'day' || timeContext === 'evening') {
+    return '지금 컨디션에 맞는 루틴을 바로 시작해볼까요?';
+  }
+
+  return '오늘 아침, 가볍게 몸을 깨워볼까요?';
+}
+
+function modeFromIntent(intent: IntentCard): RecommendationCardEventPayload['mode_type'] {
+  if (intent.domain === 'trip') return 'trip';
+  return intent.mapped_mode;
+}
+
+export default function HomeIntentScreen() {
   const { profile } = useUserProfile();
   const haptic = useHaptic();
+  const { width: screenWidth, fontScale } = useWindowDimensions();
 
-  const [activeState, setActiveState] = useState<ActiveState>('cant_sleep');
-  const [selectedTheme, setSelectedTheme] = useState<ThemeId>('kyoto_forest');
   const [environment, setEnvironment] = useState<BathEnvironment>('bathtub');
+  const [recentRoutines, setRecentRoutines] = useState<BathRecommendation[]>([]);
 
   const [warningVisible, setWarningVisible] = useState(false);
   const [pendingWarnings, setPendingWarnings] = useState<string[]>([]);
   const [pendingRecId, setPendingRecId] = useState<string | null>(null);
   const [pendingStartPayload, setPendingStartPayload] =
     useState<RecommendationCardEventPayload | null>(null);
-  const [detailVisible, setDetailVisible] = useState(false);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<HomeSuggestion | null>(null);
-  const [selectedPayload, setSelectedPayload] = useState<RecommendationCardEventPayload | null>(null);
-  const [productModalVisible, setProductModalVisible] = useState(false);
-  const [pendingRecommendation, setPendingRecommendation] = useState<BathRecommendation | null>(null);
+
+  const [subModalVisible, setSubModalVisible] = useState(false);
+  const [selectedIntent, setSelectedIntent] = useState<IntentCard | null>(null);
+  const [selectedIntentPayload, setSelectedIntentPayload] =
+    useState<RecommendationCardEventPayload | null>(null);
 
   const sessionIdRef = useRef(`session_${Date.now()}`);
 
   useEffect(() => {
     loadLastEnvironment().then((saved) => {
       if (saved) {
-        setEnvironment(saved);
+        setEnvironment(normalizeEnvironmentInput(saved));
         return;
       }
       if (profile) {
         setEnvironment(normalizeEnvironmentInput(profile.bathEnvironment));
       }
     });
+
+    loadHistory().then((history) => {
+      setRecentRoutines(history.slice(0, 8));
+    });
   }, [profile]);
 
   const timeContext = useMemo(() => getTimeContext(), []);
+  const sectionOrder = useMemo(() => getSectionOrderByContext(timeContext), [timeContext]);
 
-  const selectedMode = useMemo(
-    () => selectModeByPolicy(activeState, timeContext),
-    [activeState, timeContext]
+  const headlineMessage = useMemo(
+    () => buildHeadlineMessage(timeContext, recentRoutines),
+    [recentRoutines, timeContext]
   );
 
-  const productCandidateAvailable = useMemo(
-    () => hasProductCandidates(selectedMode, environment),
-    [environment, selectedMode]
+  const normalizedEnvironment = normalizeEnvironmentInput(environment);
+  const careCards = CARE_INTENT_CARDS;
+  const tripCards = TRIP_INTENT_CARDS;
+
+  const sortedSections = useMemo(() => {
+    const care = { key: 'care' as const, title: '케어 루틴', cards: careCards };
+    const trip = { key: 'trip' as const, title: '트립 루틴', cards: tripCards };
+    return sectionOrder === 'care_first' ? [care, trip] : [trip, care];
+  }, [careCards, tripCards, sectionOrder]);
+
+  const useSingleColumn = screenWidth < 380 || fontScale >= 1.15;
+  const gridColumns = useSingleColumn ? 1 : 2;
+  const sectionInnerWidth = Math.max(
+    220,
+    screenWidth - SCREEN_HORIZONTAL_PADDING * 2 - SECTION_HORIZONTAL_PADDING * 2
   );
-
-  const orchestration = useMemo(
-    () =>
-      buildHomeOrchestration({
-        activeState,
-        timeContext,
-        environment,
-        healthConditions: profile?.healthConditions ?? ['none'],
-        hasProfile: Boolean(profile),
-        productCandidateAvailable,
-        selectedThemeId: selectedTheme,
-      }),
-    [
-      activeState,
-      timeContext,
-      environment,
-      profile,
-      productCandidateAvailable,
-      selectedTheme,
-    ]
-  );
-
-  const isLateNightSleepPriority =
-    orchestration.fallbackStrategy === 'none' &&
-    timeContext === 'late_night' &&
-    orchestration.selectedMode === 'sleep';
-  const isEngineConflictResolved = orchestration.engineConflictResolved;
-
-  const suggestions = [
-    orchestration.primarySuggestion,
-    ...orchestration.secondarySuggestions,
-  ];
+  const intentCardWidth =
+    gridColumns === 2 ? (sectionInnerWidth - CARD_GAP) / 2 : sectionInnerWidth;
+  const intentCardMinHeight = useSingleColumn
+    ? CARD_MIN_HEIGHT_COMPACT
+    : CARD_MIN_HEIGHT_REGULAR;
 
   useEffect(() => {
     const appVersion = Constants.expoConfig?.version ?? 'unknown';
     const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    const healthConditions = profile?.healthConditions ?? ['none'];
 
-    suggestions.forEach((suggestion) => {
-      trackRecommendationCardImpression({
+    [...careCards, ...tripCards].forEach((intent) => {
+      const payload: RecommendationCardEventPayload = {
         user_id: profile?.createdAt ?? 'anonymous',
         session_id: sessionIdRef.current,
         app_version: appVersion,
@@ -224,26 +280,36 @@ export default function HomeOrchestrationScreen() {
         time_context: timeContext,
         environment,
         partial_bath_subtype: environment === 'partial_bath' ? 'footbath' : null,
-        active_state: activeState,
-        mode_type: suggestion.mode === 'trip' ? 'trip' : orchestration.selectedMode,
-        suggestion_id: suggestion.id,
-        suggestion_rank: suggestion.rank,
-        fallback_strategy_applied: orchestration.fallbackStrategy,
+        active_state: mapIntentToActiveState(intent.intent_id),
+        mode_type: modeFromIntent(intent),
+        suggestion_id: intent.id,
+        suggestion_rank: mapCardPositionToRank(intent.card_position),
+        fallback_strategy_applied: resolveFallback(intent, healthConditions),
         experiment_id: 'none',
         variant: 'default',
         ts: new Date().toISOString(),
-        engine_source: suggestion.mode,
-      });
+        engine_source: intent.domain,
+        intent_id: intent.intent_id,
+        intent_domain: intent.domain,
+        section_order: sectionOrder,
+        card_position: intent.card_position,
+      };
+      trackIntentCardImpression(payload);
     });
-  }, [
-    activeState,
-    environment,
-    orchestration.fallbackStrategy,
-    orchestration.selectedMode,
-    profile?.createdAt,
-    suggestions,
-    timeContext,
-  ]);
+  }, [careCards, environment, profile?.createdAt, profile?.healthConditions, sectionOrder, timeContext, tripCards]);
+
+  const disclosureLines = useMemo(() => {
+    const healthConditions = profile?.healthConditions ?? ['none'];
+    const fallback = hasHighRiskCondition(healthConditions)
+      ? 'SAFE_ROUTINE_ONLY' as const
+      : 'none' as const;
+    const hasResetIntent = careCards.some((c) => c.mapped_mode === 'reset');
+    return buildDisclosureLines({
+      fallbackStrategy: fallback,
+      selectedMode: hasResetIntent ? 'reset' : 'recovery',
+      healthConditions,
+    });
+  }, [careCards, profile?.healthConditions]);
 
   const handleSelectEnvironment = (next: BathEnvironment) => {
     haptic.light();
@@ -251,70 +317,47 @@ export default function HomeOrchestrationScreen() {
     saveLastEnvironment(next);
   };
 
-  const handleOpenSuggestion = async (suggestion: HomeSuggestion) => {
-    haptic.medium();
-
-    const runtimeProfile = buildRuntimeProfile(profile, environment);
+  const handleOpenSubProtocol = (intent: IntentCard) => {
     const appVersion = Constants.expoConfig?.version ?? 'unknown';
     const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    const healthConditions = profile?.healthConditions ?? ['none'];
 
-    const eventPayload: RecommendationCardEventPayload = {
-      user_id: runtimeProfile.createdAt,
+    const payload: RecommendationCardEventPayload = {
+      user_id: profile?.createdAt ?? 'anonymous',
       session_id: sessionIdRef.current,
       app_version: appVersion,
       locale,
       time_context: timeContext,
       environment,
       partial_bath_subtype: environment === 'partial_bath' ? 'footbath' : null,
-      active_state: activeState,
-      mode_type: suggestion.mode === 'trip' ? 'trip' : orchestration.selectedMode,
-      suggestion_id: suggestion.id,
-      suggestion_rank: suggestion.rank,
-      fallback_strategy_applied: orchestration.fallbackStrategy,
+      active_state: mapIntentToActiveState(intent.intent_id),
+      mode_type: modeFromIntent(intent),
+      suggestion_id: intent.id,
+      suggestion_rank: mapCardPositionToRank(intent.card_position),
+      fallback_strategy_applied: resolveFallback(intent, healthConditions),
       experiment_id: 'none',
       variant: 'default',
       ts: new Date().toISOString(),
-      engine_source: suggestion.mode,
+      engine_source: intent.domain,
+      intent_id: intent.intent_id,
+      intent_domain: intent.domain,
+      section_order: sectionOrder,
+      card_position: intent.card_position,
     };
 
-    trackRecommendationCardClick(eventPayload);
-    setSelectedSuggestion(suggestion);
-    setSelectedPayload(eventPayload);
-    setDetailVisible(true);
-    trackWhyExplainerExposed(eventPayload);
-    if (suggestion.mode === 'trip') {
-      trackTripNarrativeEngaged(eventPayload);
-    }
+    trackIntentCardClick(payload);
+    trackSubprotocolModalOpen(payload);
+    setSelectedIntent(intent);
+    setSelectedIntentPayload(payload);
+    setSubModalVisible(true);
   };
 
-  const handleStartFromDetail = async () => {
-    if (!selectedSuggestion || !selectedPayload) return;
-
-    const runtimeProfile = buildRuntimeProfile(profile, environment);
-    const recommendation =
-      selectedSuggestion.mode === 'trip'
-        ? generateTripRecommendation(
-            runtimeProfile,
-            selectedSuggestion.themeId ?? selectedTheme,
-            toEngineEnvironment(environment)
-          )
-        : generateCareRecommendation(
-            runtimeProfile,
-            (selectedSuggestion.dailyTags ?? ['stress']) as DailyTag[],
-            toEngineEnvironment(environment)
-          );
-
-    await saveRecommendation(recommendation);
-    setDetailVisible(false);
-    trackRoutineStartedAfterWhy(selectedPayload);
-
-    if (orchestration.fallbackStrategy !== 'ROUTINE_ONLY_NO_COMMERCE') {
-      setPendingRecommendation(recommendation);
-      setProductModalVisible(true);
-      return;
+  const resolveSubOptions = (intent: IntentCard | null): SubProtocolOption[] => {
+    if (!intent) return [];
+    if (intent.domain === 'trip') {
+      return TRIP_SUBPROTOCOL_OPTIONS[intent.intent_id] ?? [];
     }
-
-    handleRouteWithSafety(recommendation, selectedPayload);
+    return CARE_SUBPROTOCOL_OPTIONS[intent.intent_id] ?? [];
   };
 
   const handleRouteWithSafety = (
@@ -325,66 +368,66 @@ export default function HomeOrchestrationScreen() {
       setPendingWarnings(recommendation.safetyWarnings);
       setPendingRecId(recommendation.id);
       setPendingStartPayload(startPayload);
-      return setWarningVisible(true);
+      setWarningVisible(true);
+      return;
     }
 
     trackRoutineStart(startPayload);
+    trackRoutineStartAfterSubprotocol(startPayload);
     router.push(`/result/recipe/${recommendation.id}`);
   };
 
-  const handleContinueAfterProducts = () => {
-    if (!pendingRecommendation || !selectedPayload) return;
-    setProductModalVisible(false);
-    handleRouteWithSafety(pendingRecommendation, selectedPayload);
-    setPendingRecommendation(null);
+  const handleSelectSubProtocol = async (option: SubProtocolOption) => {
+    if (!selectedIntent || !selectedIntentPayload) return;
+
+    haptic.medium();
+    const runtimeProfile = buildRuntimeProfile(profile, environment);
+
+    const baseRecommendation =
+      selectedIntent.domain === 'trip'
+        ? generateTripRecommendation(
+            runtimeProfile,
+            mapIntentToTheme(selectedIntent.intent_id),
+            toEngineEnvironment(environment)
+          )
+        : generateCareRecommendation(
+            runtimeProfile,
+            mapIntentToTags(selectedIntent.intent_id),
+            toEngineEnvironment(environment)
+          );
+
+    const recommendation = applySubProtocolOverrides(
+      baseRecommendation,
+      option,
+      environment,
+      selectedIntent.intent_id
+    );
+
+    await saveRecommendation(recommendation);
+    setSubModalVisible(false);
+    setSelectedIntent(null);
+    setSelectedIntentPayload(null);
+
+    const payloadWithSub: RecommendationCardEventPayload = {
+      ...selectedIntentPayload,
+      subprotocol_id: option.id,
+    };
+
+    trackSubprotocolSelected(payloadWithSub);
+    handleRouteWithSafety(recommendation, payloadWithSub);
   };
 
   const handleWarningDismiss = () => {
     setWarningVisible(false);
     if (pendingStartPayload) {
       trackRoutineStart(pendingStartPayload);
+      trackRoutineStartAfterSubprotocol(pendingStartPayload);
       setPendingStartPayload(null);
     }
     if (pendingRecId) {
       router.push(`/result/recipe/${pendingRecId}`);
       setPendingRecId(null);
     }
-  };
-
-  const showCommerceNotice =
-    orchestration.fallbackStrategy === 'ROUTINE_ONLY_NO_COMMERCE';
-  const disclosureLines = useMemo(
-    () =>
-      buildDisclosureLines({
-        fallbackStrategy: orchestration.fallbackStrategy,
-        selectedMode: orchestration.selectedMode,
-        healthConditions: profile?.healthConditions ?? ['none'],
-        engineConflictResolved: orchestration.engineConflictResolved,
-      }),
-    [
-      orchestration.engineConflictResolved,
-      orchestration.fallbackStrategy,
-      orchestration.selectedMode,
-      profile?.healthConditions,
-    ]
-  );
-  const productMatchItems = useMemo(
-    () =>
-      pendingRecommendation
-        ? buildProductMatchingSlots(pendingRecommendation, environment)
-        : [],
-    [pendingRecommendation, environment]
-  );
-
-  const trackCommerceEvent = (item: ProductMatchItem): CommerceEventPayload | null => {
-    if (!selectedPayload) return null;
-    return {
-      ...selectedPayload,
-      product_id: item.ingredient.id,
-      slot: item.slot,
-      price_tier: item.priceTier,
-      sommelier_pick: item.sommelierPick,
-    };
   };
 
   return (
@@ -396,61 +439,20 @@ export default function HomeOrchestrationScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
-          <Text style={styles.title}>{copy.home.title}</Text>
-          <Text style={styles.subtitle}>{copy.home.subtitlePrefix} {orchestration.todaySignal}</Text>
-          <Text style={styles.priorityText}>
-            {toUserFacingModeHint(
-              orchestration.selectedMode,
-              orchestration.engineConflictResolved
-            )}
-          </Text>
-        </View>
-
-        <View style={styles.fallbackBanner}>
-          <Text style={styles.fallbackTitle}>
-            {toUserFacingFallbackLabel(orchestration.fallbackStrategy)}
-          </Text>
-          <Text style={styles.fallbackText}>{orchestration.insightStrip}</Text>
-          {isEngineConflictResolved ? (
-            <Text style={styles.lateNightBadge}>{copy.home.conflictBadge}</Text>
-          ) : null}
-          {isLateNightSleepPriority ? (
-            <Text style={styles.lateNightBadge}>{copy.home.lateNightBadge}</Text>
-          ) : null}
+          <Text style={styles.title}>{headlineMessage}</Text>
+          <Text style={styles.subtitle}>지금 환경에 맞춰 루틴을 준비했어요.</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{copy.home.sections.signal}</Text>
-          <View style={styles.chipWrap}>
-            {ACTIVE_STATE_OPTIONS.map((option) => (
-              <Pressable
-                key={option.id}
-                style={[styles.chip, activeState === option.id && styles.chipActive]}
-                onPress={() => setActiveState(option.id)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    activeState === option.id && styles.chipTextActive,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{copy.home.sections.environment}</Text>
-          <View style={styles.row}>
+          <Text style={styles.sectionTitle}>오늘 환경</Text>
+          <View style={styles.environmentRow}>
             {ENV_OPTIONS.map((option) => (
               <Pressable
                 key={option.id}
                 style={[styles.envChip, environment === option.id && styles.envChipActive]}
                 onPress={() => handleSelectEnvironment(option.id)}
               >
-                <Text style={styles.envText}>
+                <Text style={styles.envText} numberOfLines={1}>
                   {option.emoji} {option.label}
                 </Text>
               </Pressable>
@@ -458,65 +460,79 @@ export default function HomeOrchestrationScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{copy.home.sections.tripTheme}</Text>
-          <View style={styles.row}>
-            {THEME_OPTIONS.map((option) => (
-              <Pressable
-                key={option.id}
-                style={[styles.envChip, selectedTheme === option.id && styles.envChipActive]}
-                onPress={() => setSelectedTheme(option.id)}
-              >
-                <Text style={styles.envText}>{option.label}</Text>
-              </Pressable>
-            ))}
+        {sortedSections.map((section) => (
+          <View key={section.key} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+
+            <View style={[styles.gridWrap, { columnGap: CARD_GAP, rowGap: CARD_GAP }]}>
+              {section.cards.map((intent) => {
+                const disabled = !intent.allowed_environments.includes(normalizedEnvironment);
+                return (
+                  <Pressable
+                    key={intent.id}
+                    disabled={disabled}
+                    style={[
+                      styles.intentCard,
+                      {
+                        width: intentCardWidth,
+                        minHeight: intentCardMinHeight,
+                        paddingVertical: useSingleColumn ? 12 : 14,
+                        paddingHorizontal: useSingleColumn ? 12 : 14,
+                      },
+                      disabled && styles.intentCardDisabled,
+                    ]}
+                    onPress={() => handleOpenSubProtocol(intent)}
+                  >
+                    <Text style={styles.intentTitle} numberOfLines={2} ellipsizeMode="tail">
+                      {intent.copy_title}
+                    </Text>
+                    <Text style={styles.intentSub} numberOfLines={2} ellipsizeMode="tail">
+                      {getEnvironmentSubtitle(intent, normalizedEnvironment)}
+                    </Text>
+                    {disabled ? (
+                      <Text style={styles.intentWarning} numberOfLines={2} ellipsizeMode="tail">
+                        현재 환경에선 제한적으로 추천돼요
+                      </Text>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
+        ))}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{copy.home.sections.suggestions}</Text>
-          {suggestions.map((suggestion) => (
-            <Pressable
-              key={suggestion.id}
-              style={[
-                styles.suggestionCard,
-                suggestion.rank === 'primary' && styles.primaryCard,
-              ]}
-              onPress={() => handleOpenSuggestion(suggestion)}
-            >
-              <Text style={styles.rankText}>{toUserFacingRankLabel(suggestion.rank)}</Text>
-              <Text style={styles.suggestionTitle}>{suggestion.title}</Text>
-              <Text style={styles.suggestionSub}>{suggestion.subtitle}</Text>
-              {orchestration.fallbackStrategy === 'RESET_WITHOUT_COLD' ? (
-                <Text style={styles.safeHint}>{copy.home.resetSafeHint}</Text>
-              ) : null}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>최근 루틴</Text>
+            <Pressable onPress={() => router.push('/(tabs)/history')}>
+              <Text style={styles.moreText}>더보기</Text>
             </Pressable>
-          ))}
-        </View>
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{copy.home.sections.quickActions}</Text>
-          <View style={styles.row}>
-            {orchestration.quickActions.map((action) => (
-              <View key={action} style={styles.quickActionPill}>
-                <Text style={styles.quickActionText}>{action}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
+            {recentRoutines.length === 0 ? (
+              <View style={styles.recentEmptyCard}>
+                <Text style={styles.recentEmptyText}>최근 기록이 아직 없어요</Text>
               </View>
-            ))}
-          </View>
-          <View style={styles.insightCard}>
-            <Text style={styles.insightText}>{orchestration.insightStrip}</Text>
-            {showCommerceNotice ? (
-              <Text style={styles.commerceHiddenText}>
-                {copy.home.noCommerceNotice}
-              </Text>
-            ) : null}
-          </View>
+            ) : (
+              recentRoutines.slice(0, 8).map((routine) => (
+                <Pressable
+                  key={routine.id}
+                  style={styles.recentCard}
+                  onPress={() => router.push(`/result/recipe/${routine.id}`)}
+                >
+                  <View style={[styles.recentColorDot, { backgroundColor: routine.colorHex }]} />
+                  <Text style={styles.recentTitle} numberOfLines={1}>{routine.themeTitle ?? '맞춤 케어'}</Text>
+                  <Text style={styles.recentSub} numberOfLines={2}>
+                    {routine.temperature.recommended}°C · {routine.durationMinutes ?? 10}분 · {ENV_LABEL[normalizeEnvironmentInput(routine.environmentUsed)] ?? '욕조'}
+                  </Text>
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
         </View>
 
-        <PersistentDisclosure
-          style={styles.disclosureInline}
-          lines={disclosureLines}
-        />
+        <PersistentDisclosure style={styles.disclosureInline} lines={disclosureLines} />
       </ScrollView>
 
       <SafetyWarning
@@ -525,50 +541,17 @@ export default function HomeOrchestrationScreen() {
         onDismiss={handleWarningDismiss}
       />
 
-      <SuggestionDetailModal
-        visible={detailVisible}
-        suggestion={selectedSuggestion}
-        explanation={
-          selectedSuggestion
-            ? buildSuggestionExplanation(
-                selectedSuggestion,
-                activeState,
-                orchestration.selectedMode
-              )
-            : null
-        }
-        onClose={() => setDetailVisible(false)}
-        onStart={handleStartFromDetail}
-      />
-
-      <ProductMatchingModal
-        visible={productModalVisible}
-        items={productMatchItems}
+      <SubProtocolPickerModal
+        visible={subModalVisible}
+        title={selectedIntent?.copy_title ?? ''}
+        domain={selectedIntent?.domain}
+        options={resolveSubOptions(selectedIntent)}
         onClose={() => {
-          setProductModalVisible(false);
-          setPendingRecommendation(null);
+          setSubModalVisible(false);
+          setSelectedIntent(null);
+          setSelectedIntentPayload(null);
         }}
-        onContinue={handleContinueAfterProducts}
-        onProductPress={(item) => {
-          const event = trackCommerceEvent(item);
-          if (!event) return;
-          trackProductDetailView(event);
-          if (item.sommelierPick) {
-            trackSommelierPickClick(event);
-          }
-        }}
-        onPurchasePress={async (item) => {
-          const event = trackCommerceEvent(item);
-          if (event) {
-            trackAffiliateLinkClick(event);
-            if (item.sommelierPick) {
-              trackSommelierPickClick(event);
-            }
-          }
-          const url = item.ingredient.purchaseUrl;
-          if (!url) return;
-          await Linking.openURL(url);
-        }}
+        onSelect={handleSelectSubProtocol}
       />
     </View>
   );
@@ -577,16 +560,17 @@ export default function HomeOrchestrationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: {
-    padding: 20,
-    paddingBottom: 28,
-    gap: 16,
+    paddingHorizontal: SCREEN_HORIZONTAL_PADDING,
+    paddingTop: 20,
+    paddingBottom: 32,
+    gap: SECTION_GAP,
   },
   headerCard: {
     backgroundColor: CARD_SURFACE,
     borderWidth: 1,
     borderColor: CARD_BORDER,
     borderRadius: 18,
-    padding: 16,
+    padding: 18,
     shadowColor: CARD_SHADOW,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
@@ -599,87 +583,49 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY,
   },
   subtitle: {
-    marginTop: 6,
-    fontSize: TYPE_SCALE.body,
-    color: TEXT_SECONDARY,
-  },
-  priorityText: {
     marginTop: 8,
-    fontSize: TYPE_SCALE.caption,
-    color: TEXT_SECONDARY,
-  },
-  fallbackBanner: {
-    borderWidth: 1,
-    borderColor: WARNING_COLOR,
-    borderRadius: 14,
-    padding: 12,
-    backgroundColor: 'rgba(240,165,92,0.12)',
-    gap: 4,
-  },
-  fallbackTitle: {
-    color: TEXT_PRIMARY,
     fontSize: TYPE_SCALE.body,
-    fontWeight: '700',
-  },
-  fallbackText: {
     color: TEXT_SECONDARY,
-    fontSize: TYPE_SCALE.caption,
-  },
-  lateNightBadge: {
-    marginTop: 4,
-    color: WARNING_COLOR,
-    fontSize: TYPE_SCALE.caption,
-    fontWeight: '700',
+    lineHeight: 21,
   },
   section: {
     backgroundColor: CARD_SURFACE,
     borderWidth: 1,
     borderColor: CARD_BORDER,
     borderRadius: 16,
-    padding: 14,
-    gap: 10,
+    paddingHorizontal: SECTION_HORIZONTAL_PADDING,
+    paddingVertical: 16,
+    gap: 14,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   sectionTitle: {
     color: TEXT_PRIMARY,
     fontWeight: '700',
     fontSize: TYPE_SCALE.title,
   },
-  chipWrap: {
+  moreText: {
+    color: ACCENT,
+    fontSize: TYPE_SCALE.caption,
+    fontWeight: '700',
+  },
+  environmentRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-  },
-  chipActive: {
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(120,149,207,0.16)',
-  },
-  chipText: {
-    color: TEXT_SECONDARY,
-    fontSize: TYPE_SCALE.body,
-    fontWeight: '600',
-  },
-  chipTextActive: {
-    color: TEXT_PRIMARY,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
+    columnGap: 10,
+    rowGap: 10,
   },
   envChip: {
     borderRadius: 12,
     borderWidth: 1,
     borderColor: CARD_BORDER,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    minHeight: 42,
+    justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.84)',
   },
   envChipActive: {
@@ -691,69 +637,89 @@ const styles = StyleSheet.create({
     fontSize: TYPE_SCALE.body,
     fontWeight: '600',
   },
-  suggestionCard: {
+  gridWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  intentCard: {
     borderRadius: 14,
     borderWidth: 1,
     borderColor: CARD_BORDER,
-    padding: 12,
     backgroundColor: 'rgba(255,255,255,0.88)',
-    gap: 6,
+    gap: 8,
   },
-  primaryCard: {
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(120,149,207,0.12)',
+  intentCardDisabled: {
+    borderColor: WARNING_COLOR,
+    backgroundColor: 'rgba(240,165,92,0.08)',
   },
-  rankText: {
-    fontSize: TYPE_SCALE.caption,
-    color: TEXT_SECONDARY,
-    textTransform: 'uppercase',
-  },
-  suggestionTitle: {
-    fontSize: TYPE_SCALE.title,
+  intentTitle: {
     color: TEXT_PRIMARY,
-    fontWeight: '700',
-  },
-  suggestionSub: {
     fontSize: TYPE_SCALE.body,
-    color: TEXT_SECONDARY,
-    lineHeight: 20,
+    fontWeight: '700',
+    lineHeight: 22,
   },
-  safeHint: {
+  intentSub: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_SCALE.caption,
+    lineHeight: 19,
+  },
+  intentWarning: {
     marginTop: 2,
     color: WARNING_COLOR,
-    fontSize: TYPE_SCALE.caption,
+    fontSize: TYPE_SCALE.caption - 1,
     fontWeight: '700',
+    lineHeight: 17,
   },
-  quickActionPill: {
-    backgroundColor: BTN_PRIMARY,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  recentRow: {
+    gap: 12,
+    paddingRight: 8,
+    paddingVertical: 2,
   },
-  quickActionText: {
-    color: BTN_PRIMARY_TEXT,
-    fontSize: TYPE_SCALE.body,
-    fontWeight: '700',
-  },
-  insightCard: {
-    borderRadius: 12,
+  recentCard: {
+    width: 206,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: CARD_BORDER,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    paddingHorizontal: 13,
+    paddingVertical: 14,
     gap: 6,
+    minHeight: 108,
   },
-  insightText: {
+  recentColorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  recentTitle: {
+    color: TEXT_PRIMARY,
     fontSize: TYPE_SCALE.body,
+    fontWeight: '700',
+    lineHeight: 21,
+  },
+  recentSub: {
     color: TEXT_SECONDARY,
+    fontSize: TYPE_SCALE.caption,
+    lineHeight: 18,
+  },
+  recentEmptyCard: {
+    width: 240,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    minHeight: 108,
+    justifyContent: 'center',
+  },
+  recentEmptyText: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_SCALE.body,
     lineHeight: 20,
   },
-  commerceHiddenText: {
-    fontSize: TYPE_SCALE.caption,
-    color: WARNING_COLOR,
-    fontWeight: '700',
-  },
   disclosureInline: {
-    marginTop: 2,
+    marginTop: 4,
   },
 });
