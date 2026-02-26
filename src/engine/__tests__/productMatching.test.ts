@@ -59,6 +59,7 @@ const baseRecommendation: BathRecommendation = {
   },
   lighting: 'soft white',
   safetyWarnings: [],
+  environmentHints: [],
   colorHex: '#ffffff',
   createdAt: new Date().toISOString(),
 };

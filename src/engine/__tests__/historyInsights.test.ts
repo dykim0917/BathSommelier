@@ -14,6 +14,7 @@ const rec = (overrides: Partial<BathRecommendation>): BathRecommendation => ({
   ambience: { id: 'a', title: 'a', filename: 'a.mp3', durationSeconds: 1, persona: ['P1_SAFETY'] },
   lighting: 'warm',
   safetyWarnings: [],
+  environmentHints: [],
   colorHex: '#fff',
   createdAt: '2026-02-25T00:00:00.000Z',
   ...overrides,
