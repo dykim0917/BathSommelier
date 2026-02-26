@@ -3,24 +3,26 @@ import {
   View,
   Text,
   Pressable,
+  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BathEnvironment, HealthCondition, UserProfile } from '@/src/engine/types';
 import { TagChip } from '@/src/components/TagChip';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import {
-  ACCENT,
-  APP_BG_BOTTOM,
-  APP_BG_TOP,
+  APP_BG_BASE,
   BTN_DISABLED,
+  BTN_PRIMARY,
   BTN_PRIMARY_TEXT,
+  TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   TYPE_BODY,
+  TYPE_CAPTION,
   TYPE_HEADING_LG,
 } from '@/src/data/colors';
 
@@ -74,23 +76,25 @@ export default function OnboardingHealth() {
       updatedAt: new Date().toISOString(),
     };
     await save(profile);
-    router.replace('/(tabs)');
+    router.push('/onboarding/greeting');
   };
 
   const hasSelection = selectedConditions.size > 0;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.decorCircle} />
+      {/* Back arrow */}
+      <TouchableOpacity
+        style={styles.backButton}
+        activeOpacity={0.7}
+        onPress={() => router.back()}
+      >
+        <FontAwesome name="angle-left" size={28} color={TEXT_PRIMARY} />
+      </TouchableOpacity>
 
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.step}>02 / 02</Text>
-          <Text style={styles.title}>건강 상태를 선택해주세요</Text>
+          <Text style={styles.title}>건강 상태를{'\n'}선택해주세요</Text>
           <Text style={styles.subtitle}>안전한 입욕법을 위해 해당 사항을 모두 선택해주세요</Text>
         </View>
 
@@ -109,6 +113,10 @@ export default function OnboardingHealth() {
 
         <View style={styles.spacer} />
 
+        <View style={styles.stepIndicator}>
+          <Text style={styles.stepText}>02 / 02</Text>
+        </View>
+
         <Pressable
           style={[styles.completeButton, !hasSelection && styles.completeButtonDisabled]}
           onPress={handleComplete}
@@ -124,40 +132,35 @@ export default function OnboardingHealth() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: APP_BG_BASE,
   },
-  decorCircle: {
-    position: 'absolute',
-    right: -35,
-    top: 56,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(120,149,207,0.22)',
+  backButton: {
+    marginLeft: 20,
+    marginTop: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingHorizontal: 24,
   },
   header: {
-    marginBottom: 24,
-  },
-  step: {
-    fontSize: 12,
-    color: TEXT_SECONDARY,
-    marginBottom: 10,
-    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 32,
   },
   title: {
     fontSize: TYPE_HEADING_LG,
     fontWeight: '800',
     color: TEXT_PRIMARY,
-    lineHeight: 36,
-    marginBottom: 8,
+    lineHeight: 40,
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: TYPE_BODY,
-    color: TEXT_SECONDARY,
+    color: TEXT_MUTED,
     lineHeight: 20,
   },
   conditions: {
@@ -167,12 +170,22 @@ const styles = StyleSheet.create({
   spacer: {
     flex: 1,
   },
-  completeButton: {
-    backgroundColor: ACCENT,
-    borderRadius: 999,
-    paddingVertical: 15,
+  stepIndicator: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  stepText: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    fontWeight: '600',
+  },
+  completeButton: {
+    backgroundColor: BTN_PRIMARY,
+    borderRadius: 38,
+    height: 63,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   completeButtonDisabled: {
     backgroundColor: BTN_DISABLED,
@@ -181,5 +194,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: BTN_PRIMARY_TEXT,
+    letterSpacing: 0.5,
   },
 });

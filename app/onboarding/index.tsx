@@ -6,22 +6,22 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { BathEnvironment } from '@/src/engine/types';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import {
   ACCENT,
-  APP_BG_BOTTOM,
-  APP_BG_TOP,
+  ACCENT_LIGHT,
+  APP_BG_BASE,
   BTN_DISABLED,
+  BTN_PRIMARY,
   BTN_PRIMARY_TEXT,
-  CARD_BORDER,
-  CARD_SHADOW,
-  CARD_SURFACE,
+  TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   TYPE_BODY,
+  TYPE_CAPTION,
   TYPE_HEADING_LG,
   TYPE_TITLE,
 } from '@/src/data/colors';
@@ -72,43 +72,55 @@ export default function OnboardingEnvironment() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.bloomPink} />
-      <View style={styles.bloomBlue} />
+      {/* Back arrow */}
+      <TouchableOpacity
+        style={styles.backButton}
+        activeOpacity={0.7}
+        onPress={() => router.back()}
+      >
+        <FontAwesome name="angle-left" size={28} color={TEXT_PRIMARY} />
+      </TouchableOpacity>
 
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.step}>01 / 02</Text>
-          <Text style={styles.title}>나의 목욕 환경을 알려주세요</Text>
+          <Text style={styles.title}>나의 목욕 환경을{'\n'}알려주세요</Text>
           <Text style={styles.subtitle}>환경에 맞는 최적의 레시피를 추천해드립니다</Text>
         </View>
 
         <View style={styles.cards}>
-          {ENVIRONMENTS.map((env) => (
-            <TouchableOpacity
-              key={env.id}
-              activeOpacity={0.8}
-              onPress={() => handleSelect(env.id)}
-              style={[
-                styles.card,
-                selected === env.id && {
-                  borderColor: ACCENT,
-                  backgroundColor: '#EDF3FF',
-                },
-              ]}
-            >
-              <Text style={styles.emoji}>{env.emoji}</Text>
-              <Text style={styles.cardLabel}>{env.labelKo}</Text>
-              <Text style={styles.cardDesc}>{env.desc}</Text>
-            </TouchableOpacity>
-          ))}
+          {ENVIRONMENTS.map((env) => {
+            const isSelected = selected === env.id;
+            return (
+              <TouchableOpacity
+                key={env.id}
+                activeOpacity={0.8}
+                onPress={() => handleSelect(env.id)}
+                style={[
+                  styles.card,
+                  isSelected && styles.cardSelected,
+                ]}
+              >
+                <Text style={styles.emoji}>{env.emoji}</Text>
+                <View style={styles.cardText}>
+                  <Text style={[styles.cardLabel, isSelected && styles.cardLabelSelected]}>
+                    {env.labelKo}
+                  </Text>
+                  <Text style={styles.cardDesc}>{env.desc}</Text>
+                </View>
+                {isSelected && (
+                  <FontAwesome name="check" size={16} color={ACCENT} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      </View>
 
-      <View style={styles.bottomArea}>
+        <View style={styles.spacer} />
+
+        <View style={styles.stepIndicator}>
+          <Text style={styles.stepText}>01 / 02</Text>
+        </View>
+
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={handleNext}
@@ -125,93 +137,93 @@ export default function OnboardingEnvironment() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: APP_BG_BASE,
   },
-  bloomPink: {
-    position: 'absolute',
-    right: -46,
-    top: 84,
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: 'rgba(248,208,208,0.35)',
-  },
-  bloomBlue: {
-    position: 'absolute',
-    left: -56,
-    bottom: 120,
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    backgroundColor: 'rgba(120,149,207,0.22)',
+  backButton: {
+    marginLeft: 20,
+    marginTop: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingHorizontal: 24,
   },
   header: {
-    marginBottom: 20,
-  },
-  step: {
-    fontSize: 12,
-    color: TEXT_SECONDARY,
-    marginBottom: 10,
-    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 32,
   },
   title: {
     fontSize: TYPE_HEADING_LG,
     fontWeight: '800',
     color: TEXT_PRIMARY,
-    lineHeight: 36,
-    marginBottom: 8,
+    lineHeight: 40,
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: TYPE_BODY,
-    color: TEXT_SECONDARY,
+    color: TEXT_MUTED,
     lineHeight: 20,
   },
   cards: {
-    flex: 1,
-    gap: 10,
+    gap: 14,
   },
   card: {
-    backgroundColor: CARD_SURFACE,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    padding: 18,
+    flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: '#F2F3F7',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
+  cardSelected: {
+    backgroundColor: ACCENT_LIGHT,
+    borderColor: ACCENT,
   },
   emoji: {
-    fontSize: 34,
-    marginBottom: 10,
+    fontSize: 36,
+    marginRight: 16,
+  },
+  cardText: {
+    flex: 1,
   },
   cardLabel: {
     fontSize: TYPE_TITLE,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 4,
+    marginBottom: 2,
+  },
+  cardLabelSelected: {
+    color: ACCENT,
   },
   cardDesc: {
-    fontSize: 12,
+    fontSize: TYPE_CAPTION,
     color: TEXT_SECONDARY,
   },
-  bottomArea: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+  spacer: {
+    flex: 1,
+  },
+  stepIndicator: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  stepText: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    fontWeight: '600',
   },
   nextButton: {
-    backgroundColor: ACCENT,
-    borderRadius: 999,
-    paddingVertical: 15,
+    backgroundColor: BTN_PRIMARY,
+    borderRadius: 38,
+    height: 63,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
   nextButtonDisabled: {
     backgroundColor: BTN_DISABLED,
@@ -220,5 +232,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: BTN_PRIMARY_TEXT,
+    letterSpacing: 0.5,
   },
 });

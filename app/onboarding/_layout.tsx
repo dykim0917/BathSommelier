@@ -10,6 +10,7 @@ export default function OnboardingLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="health" />
+      <Stack.Screen name="greeting" />
     </Stack>
   );
 }

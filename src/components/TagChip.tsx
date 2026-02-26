@@ -7,6 +7,7 @@ import {
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   ACCENT,
+  ACCENT_LIGHT,
   PILL_ACTIVE_BG,
 } from '@/src/data/colors';
 
@@ -32,7 +33,7 @@ export function TagChip({
       style={[
         styles.chip,
         selected && {
-          backgroundColor: PILL_ACTIVE_BG,
+          backgroundColor: ACCENT_LIGHT,
           borderColor: accentColor,
         },
       ]}
@@ -49,26 +50,21 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    backgroundColor: CARD_SURFACE,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    backgroundColor: '#F2F3F7',
     marginRight: 8,
-    marginBottom: 8,
-    gap: 6,
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: 10,
+    gap: 8,
   },
   emoji: {
-    fontSize: 16,
+    fontSize: 18,
   },
   label: {
-    fontSize: 13,
+    fontSize: 14,
     color: TEXT_SECONDARY,
     fontWeight: '500',
   },
