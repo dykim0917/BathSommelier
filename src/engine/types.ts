@@ -16,12 +16,43 @@ export type TimeContext = 'late_night' | 'morning' | 'day' | 'evening';
 export type HomeModeType = 'sleep' | 'recovery' | 'reset';
 export type PriorityResolution = 'CARE_PRIMARY__TRIP_SECONDARY';
 export type HomeSuggestionRank = 'primary' | 'secondary_1' | 'secondary_2';
+export type SectionOrder = 'care_first' | 'trip_first';
 export type FallbackStrategy =
   | 'none'
   | 'DEFAULT_STARTER_RITUAL'
   | 'SAFE_ROUTINE_ONLY'
   | 'RESET_WITHOUT_COLD'
   | 'ROUTINE_ONLY_NO_COMMERCE';
+
+export type IntentDomain = 'care' | 'trip';
+
+export interface SubProtocolOverrides {
+  behavior_blocks: string[];
+  lighting_adjustment?: string;
+  duration_delta?: number;
+  environment_bias?: CanonicalBathEnvironment;
+}
+
+export interface SubProtocolOption {
+  id: string;
+  intent_id: string;
+  label: string;
+  hint: string;
+  is_default: boolean;
+  partialOverrides: SubProtocolOverrides;
+}
+
+export interface IntentCard {
+  id: string;
+  domain: IntentDomain;
+  intent_id: string;
+  mapped_mode: HomeModeType;
+  allowed_environments: CanonicalBathEnvironment[];
+  copy_title: string;
+  copy_subtitle_by_environment: Record<CanonicalBathEnvironment, string>;
+  default_subprotocol_id: string;
+  card_position: number;
+}
 
 export interface HomeSuggestion {
   id: string;
@@ -54,6 +85,10 @@ export interface HomeOrchestrationContract {
   insightStrip: string;
   fallbackStrategy: FallbackStrategy;
   priorityResolution: PriorityResolution;
+  sectionOrder?: SectionOrder;
+  headlineMessage?: string;
+  careIntentCards?: IntentCard[];
+  tripIntentCards?: IntentCard[];
 }
 
 // --- Recommendation Modes ---
@@ -203,6 +238,8 @@ export interface TripMemoryRecord {
 export interface BathRecommendation {
   id: string;
   mode: RecommendationMode;
+  intentId?: string;
+  subProtocolId?: string;
   themeId?: ThemeId;
   themeTitle?: string;
   persona: PersonaCode;
@@ -214,7 +251,9 @@ export interface BathRecommendation {
   music: MusicTrack;
   ambience: AmbienceTrack;
   lighting: string;
+  behaviorBlocks?: string[];
   safetyWarnings: string[];
+  environmentHints: string[];
   colorHex: string;
   createdAt: string;
   feedback?: BathFeedback;

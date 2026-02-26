@@ -16,6 +16,11 @@ interface CommonEventProperties {
   experiment_id: string;
   variant: string;
   ts: string;
+  intent_id?: string;
+  intent_domain?: 'care' | 'trip';
+  subprotocol_id?: string;
+  section_order?: 'care_first' | 'trip_first';
+  card_position?: number;
 }
 
 export interface RecommendationCardEventPayload extends CommonEventProperties {
@@ -89,6 +94,26 @@ export function trackRecommendationCardImpression(payload: RecommendationCardEve
 
 export function trackRecommendationCardClick(payload: RecommendationCardEventPayload): void {
   emit('recommendation_card_click', payload);
+}
+
+export function trackIntentCardImpression(payload: RecommendationCardEventPayload): void {
+  emit('intent_card_impression', payload);
+}
+
+export function trackIntentCardClick(payload: RecommendationCardEventPayload): void {
+  emit('intent_card_click', payload);
+}
+
+export function trackSubprotocolModalOpen(payload: RecommendationCardEventPayload): void {
+  emit('subprotocol_modal_open', payload);
+}
+
+export function trackSubprotocolSelected(payload: RecommendationCardEventPayload): void {
+  emit('subprotocol_selected', payload);
+}
+
+export function trackRoutineStartAfterSubprotocol(payload: RecommendationCardEventPayload): void {
+  emit('routine_start_after_subprotocol', payload);
 }
 
 export function trackRoutineStart(payload: RecommendationCardEventPayload): void {

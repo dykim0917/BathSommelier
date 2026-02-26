@@ -87,6 +87,7 @@ export function generateCareRecommendation(
     ambience,
     lighting: resolved.primaryPersona.lighting,
     safetyWarnings: safety.warnings,
+    environmentHints: [],
     colorHex: PERSONA_COLORS[resolved.primaryPersona.code],
     createdAt: new Date().toISOString(),
   };
@@ -144,6 +145,7 @@ export function generateTripRecommendation(
     ambience,
     lighting: theme.lighting,
     safetyWarnings: safety.warnings,
+    environmentHints: [],
     colorHex: theme.colorHex,
     createdAt: new Date().toISOString(),
   };
