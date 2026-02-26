@@ -68,13 +68,13 @@ describe('Safety Filter', () => {
     expect(result.warnings[0]).toContain('음주');
   });
 
-  test('diabetes adds warning but no temp cap', () => {
+  test('diabetes adds warning and caps temperature at 40°C', () => {
     const profile = makeProfile({
       healthConditions: ['diabetes'],
     });
     const result = applySafetyFilter(profile, []);
 
-    expect(result.maxTempCeiling).toBeNull();
+    expect(result.maxTempCeiling).toBe(40);
     expect(result.warnings.length).toBe(1);
     expect(result.warnings[0]).toContain('당뇨');
   });

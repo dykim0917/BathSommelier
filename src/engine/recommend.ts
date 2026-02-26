@@ -35,7 +35,7 @@ export function generateCareRecommendation(
   const safety = applySafetyFilter(profile, dailyTags);
 
   let matchedPersonas = matchPersonas(dailyTags);
-  if (shouldForceSafetyPersona(profile, safety)) {
+  if (shouldForceSafetyPersona(profile, safety, dailyTags)) {
     matchedPersonas = [
       PERSONA_DEFINITIONS.find((p) => p.code === 'P1_SAFETY')!,
     ];
@@ -225,11 +225,13 @@ function matchPersonas(tags: DailyTag[]): PersonaDefinition[] {
 
 function shouldForceSafetyPersona(
   profile: UserProfile,
-  _safety: SafetyFilterResult
+  _safety: SafetyFilterResult,
+  tags: DailyTag[]
 ): boolean {
   return (
     profile.healthConditions.includes('hypertension_heart') ||
-    profile.healthConditions.includes('pregnant')
+    profile.healthConditions.includes('pregnant') ||
+    tags.includes('hangover')
   );
 }
 

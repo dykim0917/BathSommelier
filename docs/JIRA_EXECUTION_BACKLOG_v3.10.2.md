@@ -229,6 +229,7 @@ Acceptance Criteria:
 - cold contraindication에서 냉수 CTA 노출 0%
 - fall risk에서 safe routine 강제
 - orthostatic/hypertension 오버라이드 규칙 통과
+- 8 페르소나 시나리오 회귀 테스트(`scenario.test.ts`)가 기본 테스트에서 항상 통과
 
 ### Story E10-S2 - 릴리즈 게이트 운영
 Acceptance Criteria:

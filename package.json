@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "export:web": "expo export --platform web",
     "test": "jest",
+    "test:scenario:print": "jest src/engine/__tests__/scenario_output.test.ts --runInBand",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

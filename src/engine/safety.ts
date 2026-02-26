@@ -36,6 +36,7 @@ const SAFETY_RULES: SafetyRule[] = [
   },
   {
     condition: 'diabetes',
+    maxTemp: 40,
     warningMessage:
       '🩸 당뇨가 있으시므로 족욕 시 수온을 자주 확인해주세요. 화상에 유의하세요.',
     severity: 'warn',

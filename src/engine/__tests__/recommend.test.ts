@@ -70,6 +70,7 @@ describe('Full Recommendation Pipeline', () => {
     const profile = makeProfile();
     const result = generateRecommendation(profile, ['hangover']);
 
+    expect(result.persona).toBe('P1_SAFETY');
     expect(result.bathType).toBe('foot');
     expect(result.temperature.recommended).toBeLessThanOrEqual(38);
     expect(result.safetyWarnings.length).toBeGreaterThan(0);
@@ -197,6 +198,16 @@ describe('Full Recommendation Pipeline', () => {
     expect(result.bathType).toBe('foot');
     expect(result.temperature.recommended).toBeLessThanOrEqual(38);
     expect(result.safetyWarnings.length).toBeGreaterThan(0);
+  });
+
+  test('diabetes + muscle_pain caps recommended temp at 40C', () => {
+    const profile = makeProfile({
+      healthConditions: ['diabetes'],
+    });
+    const result = generateRecommendation(profile, ['muscle_pain']);
+
+    expect(result.temperature.recommended).toBeLessThanOrEqual(40);
+    expect(result.temperature.max).toBeLessThanOrEqual(40);
   });
 
   test('hypertension + pregnant: double safety applied', () => {

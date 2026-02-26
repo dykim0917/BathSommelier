@@ -66,3 +66,11 @@ commerce_properties {
 - `experiment_id` 또는 `variant` 누락 시 A/B 분석 테이블에서 제외한다.
 - 커머스 이벤트에서 `product_id`/`slot` 누락 시 CTR/전환 집계 제외.
 - `suggestion_id` 또는 `suggestion_rank` 누락 이벤트는 추천 퍼널 분석에서 제외.
+
+## 6. Scenario Regression Gate (선택)
+- 엔진 정책 회귀 방지를 위해 시나리오 테스트를 기본 테스트 파이프라인에 포함한다.
+- 기준 스위트:
+  - `/Users/exem/DK/BathSommelier/src/engine/__tests__/scenario.test.ts`
+  - `/Users/exem/DK/BathSommelier/src/engine/__tests__/scenario_output.test.ts`
+- 운영 규칙:
+  - 시나리오 회귀 실패 시 릴리즈 게이트(E10) 통과 불가
