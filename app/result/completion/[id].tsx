@@ -105,6 +105,11 @@ export default function CompletionScreen() {
     router.replace('/(tabs)');
   };
 
+  const handleGoHistory = async () => {
+    await clearSession();
+    router.replace('/(tabs)/history');
+  };
+
   if (!recommendation) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -227,7 +232,14 @@ export default function CompletionScreen() {
 
             <PersistentDisclosure style={styles.disclosureInline} />
 
-            <Animated.View entering={FadeIn.duration(500).delay(1000)}>
+            <Animated.View entering={FadeIn.duration(500).delay(1000)} style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.homeButton, styles.secondaryButton]}
+                onPress={handleGoHistory}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.homeButtonText, styles.secondaryButtonText]}>기록 보기</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.homeButton}
                 onPress={handleGoHome}
@@ -387,16 +399,28 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 14,
   },
+  actionRow: {
+    width: '100%',
+    gap: 10,
+  },
   homeButton: {
     backgroundColor: ACCENT,
     borderRadius: 20,
     paddingVertical: 16,
-    paddingHorizontal: 60,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
   homeButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#fff',
+  },
+  secondaryButton: {
+    backgroundColor: CARD_GLASS,
+    borderWidth: 1,
+    borderColor: CARD_BORDER_SOFT,
+  },
+  secondaryButtonText: {
+    color: TEXT_PRIMARY,
   },
 });

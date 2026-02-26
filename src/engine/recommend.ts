@@ -23,6 +23,10 @@ export function generateRecommendation(
   return generateCareRecommendation(profile, dailyTags, profile.bathEnvironment);
 }
 
+function generateRecommendationId(): string {
+  return `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function generateCareRecommendation(
   profile: UserProfile,
   dailyTags: DailyTag[],
@@ -75,7 +79,7 @@ export function generateCareRecommendation(
     AMBIENCE_TRACKS[0];
 
   return {
-    id: `rec_${Date.now()}`,
+    id: generateRecommendationId(),
     mode: 'care',
     persona: resolved.primaryPersona.code,
     environmentUsed: environment,
@@ -123,7 +127,7 @@ export function generateTripRecommendation(
   }
 
   const persona = mapThemeToPersona(themeId);
-  const ingredientIds = buildTripIngredientIds(theme.recScent, context);
+  const ingredientIds = buildTripIngredientIds(theme.id, context);
   const ingredients = resolveIngredients(profile, ingredientIds);
 
   const music = MUSIC_TRACKS.find((track) => track.id === theme.musicId) ?? MUSIC_TRACKS[0];
@@ -131,7 +135,7 @@ export function generateTripRecommendation(
     AMBIENCE_TRACKS.find((track) => track.id === theme.ambienceId) ?? AMBIENCE_TRACKS[0];
 
   return {
-    id: `rec_${Date.now()}`,
+    id: generateRecommendationId(),
     mode: 'trip',
     themeId: theme.id,
     themeTitle: theme.title,
@@ -179,22 +183,22 @@ function buildIngredientIds(
 }
 
 function buildTripIngredientIds(
-  scent: string,
+  themeId: ThemeId,
   context: ReturnType<typeof applyEnvironmentOverrides>
 ): string[] {
-  const scentMap: Record<string, string> = {
-    히노끼: 'hinoki_oil',
-    유칼립투스: 'eucalyptus_oil',
-    로즈: 'lavender_oil',
-    자작나무: 'chamomile_oil',
-    샌달우드: 'marjoram_oil',
-    시트러스: 'grapefruit_oil',
-    베르가못: 'lavender_oil',
-    시더우드: 'hinoki_oil',
+  const themeIngredientMap: Record<ThemeId, string> = {
+    kyoto_forest: 'hinoki_oil',
+    rainy_camping: 'lavender_oil',
+    midnight_paris: 'lavender_oil',
+    nordic_sauna: 'eucalyptus_oil',
+    desert_onsen: 'marjoram_oil',
+    ocean_dawn: 'grapefruit_oil',
+    tea_house: 'chamomile_oil',
+    snow_cabin: 'hinoki_oil',
   };
 
   return buildIngredientIds(
-    [scentMap[scent] ?? 'lavender_oil'],
+    [themeIngredientMap[themeId]],
     context.additionalIngredientIds,
     context.removedIngredientIds,
     []
@@ -223,11 +227,16 @@ function shouldForceSafetyPersona(
   profile: UserProfile,
   _safety: SafetyFilterResult
 ): boolean {
-  return profile.healthConditions.includes('hypertension_heart');
+  return (
+    profile.healthConditions.includes('hypertension_heart') ||
+    profile.healthConditions.includes('pregnant')
+  );
 }
 
 function mapThemeToPersona(themeId: ThemeId): PersonaCode {
   switch (themeId) {
+    case 'kyoto_forest':
+      return 'P1_SAFETY';
     case 'rainy_camping':
     case 'nordic_sauna':
       return 'P2_CIRCULATION';
@@ -237,9 +246,8 @@ function mapThemeToPersona(themeId: ThemeId): PersonaCode {
     case 'desert_onsen':
       return 'P3_MUSCLE';
     case 'ocean_dawn':
+      return 'P2_CIRCULATION';
     case 'snow_cabin':
-    case 'kyoto_forest':
-    default:
       return 'P1_SAFETY';
   }
 }

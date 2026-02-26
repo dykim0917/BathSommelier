@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Alert,
   View,
   Text,
   TouchableOpacity,
@@ -28,7 +29,7 @@ import {
 } from '@/src/data/colors';
 
 export default function RecipeScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, source } = useLocalSearchParams<{ id: string; source?: string }>();
   const [recommendation, setRecommendation] =
     useState<BathRecommendation | null>(null);
   const { height } = useWindowDimensions();
@@ -49,7 +50,21 @@ export default function RecipeScreen() {
   }
 
   const handleStartBath = () => {
-    router.replace(`/result/timer/${id}`);
+    const navigateToTimer = () => router.replace(`/result/timer/${id}`);
+
+    if (source === 'history') {
+      Alert.alert(
+        '루틴 다시 시작',
+        '이 루틴을 다시 시작하면 새 기록이 추가됩니다. 진행할까요?',
+        [
+          { text: '취소', style: 'cancel' },
+          { text: '진행', style: 'default', onPress: navigateToTimer },
+        ]
+      );
+      return;
+    }
+
+    navigateToTimer();
   };
 
   const modeLabel =
@@ -118,7 +133,9 @@ export default function RecipeScreen() {
               onPress={handleStartBath}
               activeOpacity={0.8}
             >
-              <Text style={styles.startButtonText}>{copy.routine.startCta}</Text>
+              <Text style={styles.startButtonText}>
+                {source === 'history' ? '다시 시작하기' : copy.routine.startCta}
+              </Text>
             </TouchableOpacity>
             <PersistentDisclosure />
           </Animated.View>

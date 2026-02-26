@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
+  Alert,
   View,
   Text,
   TouchableOpacity,
@@ -19,7 +20,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { BathRecommendation } from '@/src/engine/types';
 import { getRecommendationById } from '@/src/storage/history';
-import { saveSession, updateSessionCompletion } from '@/src/storage/session';
+import { clearSession, saveSession, updateSessionCompletion } from '@/src/storage/session';
 import { WaterAnimation } from '@/src/components/WaterAnimation';
 import { SteamAnimation } from '@/src/components/SteamAnimation';
 import { AudioMixer } from '@/src/components/AudioMixer';
@@ -48,7 +49,12 @@ export default function TimerScreen() {
   const [showControls, setShowControls] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<string>(new Date().toISOString());
+  const hasSessionStartedRef = useRef(false);
   const isCompletingRef = useRef(false);
+  const targetEndAtMsRef = useRef<number | null>(null);
+  const pausedAtMsRef = useRef<number | null>(null);
+  const accumulatedPausedMsRef = useRef(0);
+  const isPausedRef = useRef(false);
 
   const audio = useDualAudioPlayer(
     recommendation?.music ?? null,
@@ -69,6 +75,16 @@ export default function TimerScreen() {
 
   useEffect(() => {
     if (!id) return;
+    hasSessionStartedRef.current = false;
+    isCompletingRef.current = false;
+    targetEndAtMsRef.current = null;
+    pausedAtMsRef.current = null;
+    accumulatedPausedMsRef.current = 0;
+    isPausedRef.current = false;
+    setIsPaused(false);
+    setRemainingSeconds(0);
+    setTotalSeconds(0);
+
     getRecommendationById(id).then((rec) => {
       if (rec) {
         setRecommendation(rec);
@@ -79,87 +95,78 @@ export default function TimerScreen() {
     });
   }, [id]);
 
-  useEffect(() => {
-    if (!id) return;
-    startedAtRef.current = new Date().toISOString();
-    saveSession({
-      recommendationId: id,
-      startedAt: startedAtRef.current,
-    });
-  }, [id]);
-
-  const handleComplete = useCallback(async () => {
-    if (!id || isCompletingRef.current) return;
-    isCompletingRef.current = true;
-
+  const clearTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+  }, []);
+
+  const computeRemainingSeconds = useCallback(() => {
+    if (!targetEndAtMsRef.current) return remainingSeconds;
+    const now = Date.now();
+    const effectiveNow =
+      isPausedRef.current && pausedAtMsRef.current
+        ? pausedAtMsRef.current
+        : now;
+    const msLeft =
+      targetEndAtMsRef.current - effectiveNow - accumulatedPausedMsRef.current;
+    return Math.max(0, Math.ceil(msLeft / 1000));
+  }, [remainingSeconds]);
+
+  const handleComplete = useCallback(async (remainingAtComplete?: number) => {
+    if (!id || isCompletingRef.current) return;
+    isCompletingRef.current = true;
+
+    clearTimer();
     stopAudio();
 
     const completedAt = new Date().toISOString();
-    const actualDurationSeconds = Math.max(0, totalSeconds - remainingSeconds);
+    const derivedRemaining =
+      remainingAtComplete ?? computeRemainingSeconds();
+    const actualDurationSeconds = Math.max(0, totalSeconds - derivedRemaining);
     await updateSessionCompletion(id, completedAt, actualDurationSeconds);
     router.replace(`/result/completion/${id}`);
-  }, [id, remainingSeconds, stopAudio, totalSeconds]);
+  }, [id, clearTimer, stopAudio, totalSeconds, computeRemainingSeconds]);
+
+  const startTicking = useCallback(() => {
+    clearTimer();
+    timerRef.current = setInterval(() => {
+      const nextRemaining = computeRemainingSeconds();
+      setRemainingSeconds(nextRemaining);
+      if (nextRemaining <= 0) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        handleComplete(0);
+      }
+    }, 250);
+  }, [clearTimer, computeRemainingSeconds, handleComplete]);
 
   useEffect(() => {
-    if (!recommendation || totalSeconds === 0) return;
+    if (!id || !recommendation || totalSeconds <= 0 || hasSessionStartedRef.current) return;
 
+    const now = Date.now();
+    targetEndAtMsRef.current = now + totalSeconds * 1000;
+    accumulatedPausedMsRef.current = 0;
+    pausedAtMsRef.current = null;
+    isPausedRef.current = false;
+    hasSessionStartedRef.current = true;
+    startedAtRef.current = new Date(now).toISOString();
+    setRemainingSeconds(totalSeconds);
+
+    saveSession({
+      recommendationId: id,
+      startedAt: startedAtRef.current,
+    });
     playAudio();
+    startTicking();
+  }, [id, recommendation, totalSeconds, playAudio, startTicking]);
 
-    timerRef.current = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          handleComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
+  useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearTimer();
       stopAudio();
     };
-  }, [recommendation, totalSeconds, handleComplete, playAudio, stopAudio]);
-
-  useEffect(() => {
-    if (!recommendation) return;
-
-    if (isPaused) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      pauseAudio();
-      return;
-    }
-
-    if (!timerRef.current && remainingSeconds > 0) {
-      playAudio();
-      timerRef.current = setInterval(() => {
-        setRemainingSeconds((prev) => {
-          if (prev <= 1) {
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            handleComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-  }, [isPaused, recommendation, remainingSeconds, handleComplete, pauseAudio, playAudio]);
+  }, [clearTimer, stopAudio]);
 
   const toggleControls = () => {
     const newVal = !showControls;
@@ -168,8 +175,45 @@ export default function TimerScreen() {
   };
 
   const togglePause = () => {
-    setIsPaused((prev) => !prev);
+    if (isPausedRef.current) {
+      const now = Date.now();
+      if (pausedAtMsRef.current) {
+        accumulatedPausedMsRef.current += now - pausedAtMsRef.current;
+      }
+      pausedAtMsRef.current = null;
+      isPausedRef.current = false;
+      setIsPaused(false);
+      playAudio();
+      startTicking();
+    } else {
+      pausedAtMsRef.current = Date.now();
+      isPausedRef.current = true;
+      setIsPaused(true);
+      setRemainingSeconds(computeRemainingSeconds());
+      clearTimer();
+      pauseAudio();
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleExitRoutine = () => {
+    Alert.alert(
+      '루틴 중단',
+      '지금 나가면 진행 중인 루틴은 완료로 기록되지 않습니다. 나갈까요?',
+      [
+        { text: '계속 진행', style: 'cancel' },
+        {
+          text: '나가기',
+          style: 'destructive',
+          onPress: async () => {
+            clearTimer();
+            stopAudio();
+            await clearSession();
+            router.replace('/(tabs)');
+          },
+        },
+      ]
+    );
   };
 
   if (!recommendation) {
@@ -254,7 +298,13 @@ export default function TimerScreen() {
                     </Text>
                   </TouchableOpacity>
 
-                  <View style={styles.endButtonPlaceholder} />
+                  <TouchableOpacity
+                    style={[styles.controlButton, styles.exitButton]}
+                    onPress={handleExitRoutine}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.controlButtonText}>나가기</Text>
+                  </TouchableOpacity>
                 </View>
               </>
             )}
@@ -262,7 +312,7 @@ export default function TimerScreen() {
 
           <TouchableOpacity
             style={[styles.floatingFinishButton, { backgroundColor: recommendation.colorHex }]}
-            onPress={handleComplete}
+            onPress={() => handleComplete()}
             activeOpacity={0.85}
           >
             <Text style={styles.finishButtonText}>{copy.routine.timerFinish}</Text>
@@ -333,9 +383,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  endButtonPlaceholder: {
-    flex: 1,
-  },
   controlButton: {
     flex: 1,
     borderRadius: 18,
@@ -351,6 +398,9 @@ const styles = StyleSheet.create({
   },
   pauseButton: {
     backgroundColor: CARD_GLASS,
+  },
+  exitButton: {
+    backgroundColor: 'rgba(255,255,255,0.74)',
   },
   controlButtonText: {
     fontSize: 15,

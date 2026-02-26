@@ -56,13 +56,13 @@ describe('Full Recommendation Pipeline', () => {
     expect(result.persona).toBe('P2_CIRCULATION');
   });
 
-  test('pregnant user has no peppermint', () => {
+  test('pregnant user is forced to safety persona and has no peppermint', () => {
     const profile = makeProfile({
       healthConditions: ['pregnant'],
     });
     const result = generateRecommendation(profile, ['muscle_pain']);
 
-    // Even though P3 suggests peppermint, it should be filtered out
+    expect(result.persona).toBe('P1_SAFETY');
     expect(result.ingredients.find((i) => i.id === 'peppermint_oil')).toBeUndefined();
   });
 
@@ -118,7 +118,7 @@ describe('Full Recommendation Pipeline', () => {
     const profile = makeProfile();
     const result = generateRecommendation(profile, ['stress']);
 
-    expect(result.id).toMatch(/^rec_\d+$/);
+    expect(result.id).toMatch(/^rec_\d+_[a-z0-9]{6}$/);
   });
 
   test('recommendation has persona color', () => {

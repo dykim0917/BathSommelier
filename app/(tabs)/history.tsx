@@ -99,7 +99,12 @@ export default function HistoryScreen() {
     return (
       <Pressable
         style={styles.card}
-        onPress={() => router.push(`/result/recipe/${item.id}`)}
+        onPress={() =>
+          router.push({
+            pathname: '/result/recipe/[id]',
+            params: { id: item.id, source: 'history' },
+          })
+        }
       >
         <View style={[styles.colorDot, { backgroundColor: item.colorHex }]} />
         <View style={styles.cardContent}>
@@ -206,7 +211,12 @@ export default function HistoryScreen() {
                     <Pressable
                       key={recall.recommendationId}
                       style={styles.recallCard}
-                      onPress={() => router.push(`/result/recipe/${recall.recommendationId}`)}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/result/recipe/[id]',
+                          params: { id: recall.recommendationId, source: 'history' },
+                        })
+                      }
                     >
                       <Text style={styles.recallTitle}>
                         {copy.history.recallTitlePrefix} {index + 1}

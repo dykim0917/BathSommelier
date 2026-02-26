@@ -45,8 +45,37 @@ const CONDITION_LABELS: Record<HealthCondition, string> = {
 };
 
 export default function SettingsScreen() {
-  const { profile, loading } = useUserProfile();
+  const { profile, loading, update } = useUserProfile();
   const haptic = useHaptic();
+
+  const handleEnvironmentChange = async (environment: BathEnvironment) => {
+    if (!profile) return;
+    if (profile.bathEnvironment === environment) return;
+    haptic.light();
+    await update({ bathEnvironment: environment });
+  };
+
+  const handleHealthToggle = async (condition: HealthCondition) => {
+    if (!profile) return;
+    const next = new Set(profile.healthConditions);
+    if (condition === 'none') {
+      next.clear();
+      next.add('none');
+    } else {
+      next.delete('none');
+      if (next.has(condition)) {
+        next.delete(condition);
+      } else {
+        next.add(condition);
+      }
+      if (next.size === 0) {
+        next.add('none');
+      }
+    }
+
+    haptic.light();
+    await update({ healthConditions: Array.from(next) });
+  };
 
   const handleResetOnboarding = () => {
     Alert.alert(
@@ -90,14 +119,54 @@ export default function SettingsScreen() {
             <Text style={styles.infoLabel}>{copy.settings.environmentLabel}</Text>
             <Text style={styles.infoValue}>{ENV_LABELS[profile.bathEnvironment]}</Text>
           </View>
+          <View style={styles.conditionsList}>
+            {(Object.keys(ENV_LABELS) as BathEnvironment[]).map((env) => (
+              <TouchableOpacity
+                key={env}
+                style={[
+                  styles.conditionTagButton,
+                  profile.bathEnvironment === env && styles.conditionTagButtonActive,
+                ]}
+                onPress={() => handleEnvironmentChange(env)}
+                activeOpacity={0.78}
+              >
+                <Text
+                  style={[
+                    styles.conditionTag,
+                    profile.bathEnvironment === env && styles.conditionTagActiveText,
+                  ]}
+                >
+                  {ENV_LABELS[env]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <View style={styles.infoCardColumn}>
             <Text style={styles.infoLabel}>{copy.settings.healthLabel}</Text>
             <View style={styles.conditionsList}>
-              {profile.healthConditions.map((c) => (
-                <Text key={c} style={styles.conditionTag}>{CONDITION_LABELS[c]}</Text>
+              {(Object.keys(CONDITION_LABELS) as HealthCondition[]).map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={[
+                    styles.conditionTagButton,
+                    profile.healthConditions.includes(c) && styles.conditionTagButtonActive,
+                  ]}
+                  onPress={() => handleHealthToggle(c)}
+                  activeOpacity={0.78}
+                >
+                  <Text
+                    style={[
+                      styles.conditionTag,
+                      profile.healthConditions.includes(c) && styles.conditionTagActiveText,
+                    ]}
+                  >
+                    {CONDITION_LABELS[c]}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
+            <Text style={styles.helperText}>항목을 탭하면 바로 저장됩니다.</Text>
           </View>
         </View>
 
@@ -192,15 +261,29 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
   },
+  conditionTagButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
+  conditionTagButtonActive: {
+    borderColor: ACCENT,
+    backgroundColor: 'rgba(120,149,207,0.14)',
+  },
   conditionTag: {
     fontSize: 12,
     color: TEXT_PRIMARY,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderColor: CARD_BORDER,
-    borderWidth: 1,
     paddingHorizontal: 9,
     paddingVertical: 5,
-    borderRadius: 999,
+  },
+  conditionTagActiveText: {
+    fontWeight: '700',
+  },
+  helperText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: TEXT_MUTED,
   },
   actionCard: {
     backgroundColor: CARD_SURFACE,
