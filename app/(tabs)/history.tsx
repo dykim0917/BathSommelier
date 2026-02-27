@@ -4,9 +4,11 @@ import {
   Text,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { BathRecommendation, TripMemoryRecord } from '@/src/engine/types';
 import { loadHistory } from '@/src/storage/history';
@@ -16,20 +18,30 @@ import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { formatDuration } from '@/src/utils/time';
 import { THEME_BY_ID } from '@/src/data/themes';
 import { copy } from '@/src/content/copy';
+import { CATEGORY_CARD_EMOJI } from '@/src/data/colors';
 import {
-  APP_BG_BOTTOM,
-  APP_BG_TOP,
-  BTN_PRIMARY,
-  BTN_PRIMARY_TEXT,
+  ACCENT,
+  ACCENT_LIGHT,
+  APP_BG_BASE,
   CARD_BORDER,
   CARD_SHADOW,
   CARD_SURFACE,
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
+  TYPE_BODY,
   TYPE_CAPTION,
+  TYPE_HEADING_MD,
   TYPE_TITLE,
 } from '@/src/data/colors';
+
+type FilterMode = 'all' | 'care' | 'trip';
+
+const FILTER_OPTIONS: { key: FilterMode; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'care', label: '케어' },
+  { key: 'trip', label: '트립' },
+];
 
 const BATH_TYPE_LABELS: Record<string, string> = {
   full: '전신욕',
@@ -50,11 +62,18 @@ const ENV_LABELS = {
   shower: '샤워',
 } as const;
 
+const SIDE_PAD = 16;
+const COL_GAP = 10;
+const CARD_HEADER_HEIGHT = 100;
+
 export default function HistoryScreen() {
+  const { width } = useWindowDimensions();
+  const cardWidth = (width - SIDE_PAD * 2 - COL_GAP) / 2;
+
   const [history, setHistory] = useState<BathRecommendation[]>([]);
   const [memoryHistory, setMemoryHistory] = useState<TripMemoryRecord[]>([]);
   const [themeWeights, setThemeWeights] = useState<Record<string, number>>({});
-  const [isInsightExpanded, setIsInsightExpanded] = useState(true);
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
 
   useFocusEffect(
     useCallback(() => {
@@ -84,21 +103,32 @@ export default function HistoryScreen() {
     return { themeTitle, weight };
   }, [themeWeights]);
 
-  const latestMemory = memoryHistory[0] ?? null;
   const insights = useMemo(
     () => buildHistoryInsights(history, memoryHistory),
     [history, memoryHistory]
   );
 
-  const renderItem = ({ item }: { item: BathRecommendation }) => {
+  const filteredHistory = useMemo(() => {
+    if (filterMode === 'all') return history;
+    return history.filter((item) => item.mode === filterMode);
+  }, [history, filterMode]);
+
+  const renderCard = ({ item, index }: { item: BathRecommendation; index: number }) => {
     const persona = PERSONA_DEFINITIONS.find((p) => p.code === item.persona);
-    const memory = memoryByRecommendation[item.id];
+    const title =
+      item.themeTitle ?? persona?.nameKo ?? copy.history.cardLabels.defaultTitle;
+    const emoji = CATEGORY_CARD_EMOJI[item.intentId ?? ''] ?? '🛁';
     const date = new Date(item.createdAt);
-    const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+    const memory = memoryByRecommendation[item.id];
+    const isLeft = index % 2 === 0;
 
     return (
       <Pressable
-        style={styles.card}
+        style={[
+          styles.gridCard,
+          { width: cardWidth, marginRight: isLeft ? COL_GAP : 0 },
+        ]}
         onPress={() =>
           router.push({
             pathname: '/result/recipe/[id]',
@@ -106,131 +136,142 @@ export default function HistoryScreen() {
           })
         }
       >
-        <View style={[styles.colorDot, { backgroundColor: item.colorHex }]} />
-        <View style={styles.cardContent}>
-          <View style={styles.titleRow}>
-            <Text style={styles.cardTitle}>
-              {item.themeTitle ?? persona?.nameKo ?? copy.history.cardLabels.defaultTitle}
-            </Text>
-            <View
-              style={[
-                styles.modeBadge,
-                {
-                  borderColor: item.mode === 'trip' ? '#8B7FD6' : '#7A9FD3',
-                },
-              ]}
-            >
-              <Text style={styles.modeBadgeText}>{MODE_LABELS[item.mode]}</Text>
-            </View>
+        {/* Colored header */}
+        <View
+          style={[
+            styles.gridCardHeader,
+            { backgroundColor: item.colorHex + '33' },
+          ]}
+        >
+          <Text style={styles.gridCardEmoji}>{emoji}</Text>
+          <View
+            style={[
+              styles.modePill,
+              { backgroundColor: item.colorHex + '55' },
+            ]}
+          >
+            <Text style={styles.modePillText}>{MODE_LABELS[item.mode]}</Text>
           </View>
-
-          <Text style={styles.cardMeta}>
-            {item.temperature.recommended}°C · {BATH_TYPE_LABELS[item.bathType]} · {formatDuration(item.durationMinutes)}
-          </Text>
-          <Text style={styles.cardSubMeta}>
-            {copy.history.cardLabels.environmentPrefix} {ENV_LABELS[item.environmentUsed]}
-          </Text>
-          {memory ? (
-            <>
-              {memory.themeId ? (
-                <Text style={styles.memoryMeta}>
-                  {copy.history.cardLabels.weightPrefix} {memory.themePreferenceWeight}
-                </Text>
-              ) : null}
-              <Text style={styles.memoryRecall}>{memory.narrativeRecallCard}</Text>
-            </>
-          ) : null}
         </View>
-        <Text style={styles.cardDate}>{dateStr}</Text>
+
+        {/* Footer */}
+        <View style={styles.gridCardFooter}>
+          <Text style={styles.gridCardTitle} numberOfLines={2}>
+            {title}
+          </Text>
+          <Text style={styles.gridCardMeta}>
+            {item.temperature.recommended}°C · {BATH_TYPE_LABELS[item.bathType]}
+          </Text>
+          <View style={styles.gridCardBottom}>
+            <Text style={styles.gridCardDate}>{dateStr}</Text>
+            {memory?.narrativeRecallCard ? (
+              <FontAwesome name="comment-o" size={10} color={TEXT_MUTED} />
+            ) : null}
+          </View>
+        </View>
       </Pressable>
     );
   };
 
+  const ListHeader = () => (
+    <View style={styles.listHeader}>
+      {/* Page heading */}
+      <Text style={styles.pageTitle}>기록</Text>
+      <Text style={styles.pageSubtitle}>
+        {history.length > 0
+          ? `총 ${history.length}개의 루틴을 완료했어요`
+          : '첫 루틴을 시작해보세요'}
+      </Text>
+
+      {/* Insight banner */}
+      {history.length > 0 && (
+        <View style={styles.insightBanner}>
+          <View style={styles.insightBannerLeft}>
+            <Text style={styles.insightBannerLabel}>이번 달 요약</Text>
+            <Text style={styles.insightBannerMain}>
+              {insights.totalSessions}회 완료
+            </Text>
+            {insights.avgDurationMinutes > 0 && (
+              <Text style={styles.insightBannerSub}>
+                평균 {insights.avgDurationMinutes}분
+                {insights.topEnvironment
+                  ? ` · ${ENV_LABELS[insights.topEnvironment]}`
+                  : ''}
+              </Text>
+            )}
+            {topThemeInsight && (
+              <Text style={styles.insightBannerTheme}>
+                자주 찾은 테마: {topThemeInsight.themeTitle}
+              </Text>
+            )}
+          </View>
+          <View style={styles.insightBannerIcon}>
+            <Text style={styles.insightBannerEmoji}>🛁</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Filter pills */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterContent}
+      >
+        {FILTER_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.key}
+            style={[
+              styles.filterPill,
+              filterMode === opt.key && styles.filterPillActive,
+            ]}
+            onPress={() => setFilterMode(opt.key)}
+          >
+            <Text
+              style={[
+                styles.filterPillText,
+                filterMode === opt.key && styles.filterPillTextActive,
+              ]}
+            >
+              {opt.label}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {filteredHistory.length > 0 && (
+        <Text style={styles.gridSectionLabel}>
+          {filteredHistory.length}개의 루틴
+        </Text>
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
-        style={StyleSheet.absoluteFillObject}
-      />
-
-      {history.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>📋</Text>
-          <Text style={styles.emptyText}>{copy.history.empty.title}</Text>
-          <Text style={styles.emptySubtext}>{copy.history.empty.subtitle}</Text>
-        </View>
+      {filteredHistory.length === 0 && history.length === 0 ? (
+        <>
+          <ListHeader />
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyEmoji}>📋</Text>
+            <Text style={styles.emptyText}>{copy.history.empty.title}</Text>
+            <Text style={styles.emptySubtext}>
+              {copy.history.empty.subtitle}
+            </Text>
+          </View>
+        </>
       ) : (
         <FlatList
-          data={history}
+          data={filteredHistory}
           keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListHeaderComponent={
-            <View style={styles.insightCard}>
-              <View style={styles.insightHeaderRow}>
-                <Text style={styles.insightTitle}>{copy.history.title}</Text>
-                <Pressable
-                  style={styles.expandButton}
-                  onPress={() => setIsInsightExpanded((prev) => !prev)}
-                >
-                  <Text style={styles.expandButtonText}>
-                    {isInsightExpanded ? copy.history.collapse : copy.history.expand}
-                  </Text>
-                </Pressable>
-              </View>
-              <Text style={styles.insightLine}>
-                {copy.history.summary.sessions}: {insights.totalSessions} ·{' '}
-                {copy.history.summary.care} {insights.careSessions} ·{' '}
-                {copy.history.summary.trip} {insights.tripSessions}
+          renderItem={renderCard}
+          numColumns={2}
+          ListHeaderComponent={<ListHeader />}
+          ListEmptyComponent={
+            <View style={styles.filterEmptyContainer}>
+              <Text style={styles.filterEmptyText}>
+                {filterMode === 'care' ? '케어' : '트립'} 루틴 기록이 없어요
               </Text>
-              <Text style={styles.insightLine}>
-                {copy.history.summary.avgDuration}:{' '}
-                {insights.avgDurationMinutes > 0
-                  ? `${insights.avgDurationMinutes}분`
-                  : copy.history.summary.noData}
-              </Text>
-              <Text style={styles.insightLine}>
-                {copy.history.summary.topEnvironment}:{' '}
-                {insights.topEnvironment
-                  ? ENV_LABELS[insights.topEnvironment]
-                  : copy.history.summary.noData}
-              </Text>
-              <Text style={styles.insightLine}>
-                {copy.history.summary.memoryCount}: {memoryHistory.length}건
-              </Text>
-              {topThemeInsight ? (
-                <Text style={styles.insightLine}>
-                  {copy.history.summary.topTheme}: {topThemeInsight.themeTitle} (
-                  {topThemeInsight.weight})
-                </Text>
-              ) : (
-                <Text style={styles.insightLine}>{copy.history.summary.noTheme}</Text>
-              )}
-              {isInsightExpanded && insights.recentRecalls.length > 0 ? (
-                <View style={styles.recallList}>
-                  {insights.recentRecalls.map((recall, index) => (
-                    <Pressable
-                      key={recall.recommendationId}
-                      style={styles.recallCard}
-                      onPress={() =>
-                        router.push({
-                          pathname: '/result/recipe/[id]',
-                          params: { id: recall.recommendationId, source: 'history' },
-                        })
-                      }
-                    >
-                      <Text style={styles.recallTitle}>
-                        {copy.history.recallTitlePrefix} {index + 1}
-                      </Text>
-                      <Text style={styles.insightRecall}>{recall.text}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              ) : null}
-              {isInsightExpanded && latestMemory && insights.recentRecalls.length === 0 ? (
-                <Text style={styles.insightRecall}>
-                  {copy.history.recallTitlePrefix}: {latestMemory.narrativeRecallCard}
-                </Text>
-              ) : null}
             </View>
           }
           contentContainerStyle={styles.list}
@@ -244,165 +285,195 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: APP_BG_BASE,
   },
   list: {
-    padding: 16,
-    paddingBottom: 24,
+    paddingHorizontal: SIDE_PAD,
+    paddingBottom: 32,
   },
-  card: {
+  listHeader: {
+    paddingTop: 8,
+    marginBottom: 16,
+  },
+  pageTitle: {
+    fontSize: TYPE_HEADING_MD,
+    fontWeight: '800',
+    color: TEXT_PRIMARY,
+    marginBottom: 4,
+  },
+  pageSubtitle: {
+    fontSize: TYPE_BODY,
+    color: TEXT_MUTED,
+    marginBottom: 16,
+  },
+  // Insight banner
+  insightBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CARD_SURFACE,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 10,
+    backgroundColor: ACCENT_LIGHT,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: CARD_BORDER,
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 3,
   },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  cardContent: {
+  insightBannerLeft: {
     flex: 1,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 3,
-  },
-  cardTitle: {
-    fontSize: TYPE_TITLE,
-    fontWeight: '700',
-    color: TEXT_PRIMARY,
-    flexShrink: 1,
-  },
-  modeBadge: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  modeBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: TEXT_SECONDARY,
-    letterSpacing: 0.4,
-  },
-  cardMeta: {
-    fontSize: 13,
-    color: TEXT_SECONDARY,
-  },
-  cardSubMeta: {
+  insightBannerLabel: {
     fontSize: TYPE_CAPTION,
-    color: TEXT_MUTED,
-    marginTop: 2,
+    fontWeight: '700',
+    color: ACCENT,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
-  memoryMeta: {
+  insightBannerMain: {
+    fontSize: TYPE_TITLE,
+    fontWeight: '800',
+    color: TEXT_PRIMARY,
+    marginBottom: 4,
+  },
+  insightBannerSub: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_SECONDARY,
+    lineHeight: 18,
+  },
+  insightBannerTheme: {
     fontSize: TYPE_CAPTION,
     color: TEXT_SECONDARY,
     marginTop: 4,
+    fontStyle: 'italic',
+  },
+  insightBannerIcon: {
+    marginLeft: 16,
+  },
+  insightBannerEmoji: {
+    fontSize: 40,
+  },
+  // Filter
+  filterScroll: {
+    marginBottom: 14,
+  },
+  filterContent: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  filterPill: {
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    backgroundColor: CARD_SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+  },
+  filterPillActive: {
+    backgroundColor: ACCENT,
+    borderColor: ACCENT,
+  },
+  filterPillText: {
+    fontSize: TYPE_BODY,
+    fontWeight: '600',
+    color: TEXT_SECONDARY,
+  },
+  filterPillTextActive: {
+    color: CARD_SURFACE,
+  },
+  gridSectionLabel: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    marginBottom: 10,
+    fontWeight: '600',
+  },
+  // Grid card
+  gridCard: {
+    backgroundColor: CARD_SURFACE,
+    borderRadius: 16,
+    marginBottom: COL_GAP,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  gridCardHeader: {
+    height: CARD_HEADER_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  gridCardEmoji: {
+    fontSize: 36,
+  },
+  modePill: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  modePillText: {
+    fontSize: 10,
     fontWeight: '700',
+    color: TEXT_PRIMARY,
   },
-  memoryRecall: {
+  gridCardFooter: {
+    padding: 10,
+  },
+  gridCardTitle: {
+    fontSize: TYPE_BODY,
+    fontWeight: '700',
+    color: TEXT_PRIMARY,
+    marginBottom: 2,
+    lineHeight: 19,
+  },
+  gridCardMeta: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_SECONDARY,
+    marginBottom: 6,
+  },
+  gridCardBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  gridCardDate: {
     fontSize: TYPE_CAPTION,
     color: TEXT_MUTED,
-    marginTop: 2,
+    fontWeight: '600',
   },
-  cardDate: {
-    fontSize: TYPE_CAPTION,
-    color: TEXT_MUTED,
-    marginLeft: 8,
-  },
+  // Empty states
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 80,
   },
   emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
+    fontSize: 52,
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: TYPE_TITLE,
     fontWeight: '700',
     color: TEXT_PRIMARY,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   emptySubtext: {
-    fontSize: 13,
+    fontSize: TYPE_BODY,
     color: TEXT_SECONDARY,
+    textAlign: 'center',
   },
-  insightCard: {
-    backgroundColor: CARD_SURFACE,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  insightHeaderRow: {
-    flexDirection: 'row',
+  filterEmptyContainer: {
+    paddingVertical: 40,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
   },
-  insightTitle: {
-    color: TEXT_PRIMARY,
-    fontSize: TYPE_TITLE,
-    fontWeight: '700',
-  },
-  expandButton: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: BTN_PRIMARY,
-  },
-  expandButtonText: {
-    color: BTN_PRIMARY_TEXT,
-    fontSize: TYPE_CAPTION,
-    fontWeight: '700',
-  },
-  insightLine: {
-    fontSize: TYPE_CAPTION,
-    color: TEXT_SECONDARY,
-    lineHeight: 18,
-  },
-  insightRecall: {
-    fontSize: TYPE_CAPTION,
+  filterEmptyText: {
+    fontSize: TYPE_BODY,
     color: TEXT_MUTED,
-    lineHeight: 18,
-  },
-  recallList: {
-    marginTop: 8,
-    gap: 6,
-  },
-  recallCard: {
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    gap: 2,
-  },
-  recallTitle: {
-    fontSize: TYPE_CAPTION,
-    fontWeight: '700',
-    color: TEXT_SECONDARY,
   },
 });
