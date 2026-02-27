@@ -63,6 +63,31 @@ export const PERSONA_GRADIENTS: Record<PersonaCode, [string, string]> = {
   P4_SLEEP: ['#E8E1F9', '#B9ACE6'],
 } as const;
 
+// === Category Card Colors (intent_id → soft pastel background) ===
+export const CATEGORY_CARD_COLORS: Record<string, string> = {
+  // Care routines
+  muscle_relief:   '#B5D5C0',   // soft green — recovery, muscle
+  sleep_ready:     '#C5BEED',   // soft lavender — sleep, calm
+  hangover_relief: '#F5C5A3',   // soft peach — reset, warmth
+  edema_relief:    '#AECDE0',   // soft blue — circulation, water
+  // Trip routines
+  kyoto_forest:    '#A8C5A0',   // muted forest green
+  nordic_sauna:    '#D9C4A5',   // warm sandy beige
+  rainy_camping:   '#9DBBC8',   // steel blue
+  snow_cabin:      '#B8C5D8',   // icy blue-grey
+};
+
+export const CATEGORY_CARD_EMOJI: Record<string, string> = {
+  muscle_relief:   '💪',
+  sleep_ready:     '🌙',
+  hangover_relief: '✨',
+  edema_relief:    '💧',
+  kyoto_forest:    '🌿',
+  nordic_sauna:    '🔥',
+  rainy_camping:   '🌧️',
+  snow_cabin:      '❄️',
+};
+
 // === Compatibility aliases (keep old imports stable) ===
 export const BG = APP_BG_BASE;
 export const SURFACE = CARD_SURFACE;

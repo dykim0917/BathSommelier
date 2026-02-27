@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 import {
@@ -24,16 +23,19 @@ import { loadLastEnvironment, saveLastEnvironment } from '@/src/storage/environm
 import { SafetyWarning } from '@/src/components/SafetyWarning';
 import {
   ACCENT,
+  APP_BG_BASE,
   CARD_BORDER,
   CARD_SHADOW,
   CARD_SURFACE,
-  PASTEL_BG_BOTTOM,
-  PASTEL_BG_TOP,
+  CATEGORY_CARD_COLORS,
+  CATEGORY_CARD_EMOJI,
+  TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   TYPE_SCALE,
   WARNING_COLOR,
 } from '@/src/data/colors';
+import { CategoryCard } from '@/src/components/CategoryCard';
 import {
   RecommendationCardEventPayload,
   trackIntentCardClick,
@@ -432,76 +434,56 @@ export default function HomeIntentScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[PASTEL_BG_TOP, PASTEL_BG_BOTTOM]}
-        style={StyleSheet.absoluteFillObject}
-      />
-
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.headerCard}>
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <View style={styles.header}>
           <Text style={styles.title}>{headlineMessage}</Text>
           <Text style={styles.subtitle}>지금 환경에 맞춰 루틴을 준비했어요.</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>오늘 환경</Text>
-          <View style={styles.environmentRow}>
-            {ENV_OPTIONS.map((option) => (
-              <Pressable
-                key={option.id}
-                style={[styles.envChip, environment === option.id && styles.envChipActive]}
-                onPress={() => handleSelectEnvironment(option.id)}
-              >
-                <Text style={styles.envText} numberOfLines={1}>
-                  {option.emoji} {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+        {/* ── Environment selector ───────────────────────────────────── */}
+        <View style={styles.environmentRow}>
+          {ENV_OPTIONS.map((option) => (
+            <Pressable
+              key={option.id}
+              style={[styles.envChip, environment === option.id && styles.envChipActive]}
+              onPress={() => handleSelectEnvironment(option.id)}
+            >
+              <Text style={[styles.envText, environment === option.id && styles.envTextActive]} numberOfLines={1}>
+                {option.emoji} {option.label}
+              </Text>
+            </Pressable>
+          ))}
         </View>
 
+        {/* ── Intent sections ────────────────────────────────────────── */}
         {sortedSections.map((section) => (
-          <View key={section.key} style={styles.section}>
+          <View key={section.key}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
 
             <View style={[styles.gridWrap, { columnGap: CARD_GAP, rowGap: CARD_GAP }]}>
               {section.cards.map((intent) => {
                 const disabled = !intent.allowed_environments.includes(normalizedEnvironment);
                 return (
-                  <Pressable
+                  <CategoryCard
                     key={intent.id}
+                    title={intent.copy_title}
+                    subtitle={getEnvironmentSubtitle(intent, normalizedEnvironment)}
+                    emoji={CATEGORY_CARD_EMOJI[intent.intent_id] ?? '🛁'}
+                    bgColor={CATEGORY_CARD_COLORS[intent.intent_id] ?? '#C5D9FC'}
                     disabled={disabled}
-                    style={[
-                      styles.intentCard,
-                      {
-                        width: intentCardWidth,
-                        minHeight: intentCardMinHeight,
-                        paddingVertical: useSingleColumn ? 12 : 14,
-                        paddingHorizontal: useSingleColumn ? 12 : 14,
-                      },
-                      disabled && styles.intentCardDisabled,
-                    ]}
+                    disabledText="현재 환경에선 제한적으로 추천돼요"
                     onPress={() => handleOpenSubProtocol(intent)}
-                  >
-                    <Text style={styles.intentTitle} numberOfLines={2} ellipsizeMode="tail">
-                      {intent.copy_title}
-                    </Text>
-                    <Text style={styles.intentSub} numberOfLines={2} ellipsizeMode="tail">
-                      {getEnvironmentSubtitle(intent, normalizedEnvironment)}
-                    </Text>
-                    {disabled ? (
-                      <Text style={styles.intentWarning} numberOfLines={2} ellipsizeMode="tail">
-                        현재 환경에선 제한적으로 추천돼요
-                      </Text>
-                    ) : null}
-                  </Pressable>
+                    width={intentCardWidth}
+                    minHeight={intentCardMinHeight}
+                  />
                 );
               })}
             </View>
           </View>
         ))}
 
-        <View style={styles.section}>
+        <View>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>최근 루틴</Text>
             <Pressable onPress={() => router.push('/(tabs)/history')}>
@@ -558,139 +540,112 @@ export default function HomeIntentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: APP_BG_BASE,
+  },
   content: {
     paddingHorizontal: SCREEN_HORIZONTAL_PADDING,
-    paddingTop: 20,
+    paddingTop: 16,
     paddingBottom: 32,
     gap: SECTION_GAP,
   },
-  headerCard: {
-    backgroundColor: CARD_SURFACE,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    borderRadius: 18,
-    padding: 18,
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 3,
+
+  // ── Header ──────────────────────────────────────────────────────────
+  header: {
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   title: {
     fontSize: TYPE_SCALE.headingMd,
-    fontWeight: '700',
+    fontWeight: '800',
     color: TEXT_PRIMARY,
+    lineHeight: 32,
   },
   subtitle: {
-    marginTop: 8,
+    marginTop: 6,
     fontSize: TYPE_SCALE.body,
-    color: TEXT_SECONDARY,
+    color: TEXT_MUTED,
     lineHeight: 21,
   },
-  section: {
-    backgroundColor: CARD_SURFACE,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    borderRadius: 16,
-    paddingHorizontal: SECTION_HORIZONTAL_PADDING,
-    paddingVertical: 16,
-    gap: 14,
+
+  // ── Environment selector ────────────────────────────────────────────
+  environmentRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 8,
+    rowGap: 8,
+  },
+  envChip: {
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#EAEEF5',
+  },
+  envChipActive: {
+    backgroundColor: ACCENT,
+  },
+  envText: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_SCALE.body,
+    fontWeight: '600',
+  },
+  envTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // ── Section title ───────────────────────────────────────────────────
+  sectionTitle: {
+    color: TEXT_PRIMARY,
+    fontWeight: '800',
+    fontSize: TYPE_SCALE.title,
+    marginBottom: 12,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    color: TEXT_PRIMARY,
-    fontWeight: '700',
-    fontSize: TYPE_SCALE.title,
+    marginBottom: 12,
   },
   moreText: {
     color: ACCENT,
     fontSize: TYPE_SCALE.caption,
     fontWeight: '700',
   },
-  environmentRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 10,
-    rowGap: 10,
-  },
-  envChip: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    minHeight: 42,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.84)',
-  },
-  envChipActive: {
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(120,149,207,0.14)',
-  },
-  envText: {
-    color: TEXT_PRIMARY,
-    fontSize: TYPE_SCALE.body,
-    fontWeight: '600',
-  },
+
+  // ── Category card grid ──────────────────────────────────────────────
   gridWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
   },
-  intentCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    gap: 8,
-  },
-  intentCardDisabled: {
-    borderColor: WARNING_COLOR,
-    backgroundColor: 'rgba(240,165,92,0.08)',
-  },
-  intentTitle: {
-    color: TEXT_PRIMARY,
-    fontSize: TYPE_SCALE.body,
-    fontWeight: '700',
-    lineHeight: 22,
-  },
-  intentSub: {
-    color: TEXT_SECONDARY,
-    fontSize: TYPE_SCALE.caption,
-    lineHeight: 19,
-  },
-  intentWarning: {
-    marginTop: 2,
-    color: WARNING_COLOR,
-    fontSize: TYPE_SCALE.caption - 1,
-    fontWeight: '700',
-    lineHeight: 17,
-  },
+
+  // ── Recent routines ─────────────────────────────────────────────────
   recentRow: {
     gap: 12,
     paddingRight: 8,
     paddingVertical: 2,
   },
   recentCard: {
-    width: 206,
-    borderRadius: 14,
+    width: 180,
+    borderRadius: 16,
+    backgroundColor: CARD_SURFACE,
     borderWidth: 1,
     borderColor: CARD_BORDER,
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    paddingHorizontal: 13,
+    paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 6,
-    minHeight: 108,
+    minHeight: 100,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   recentColorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   recentTitle: {
     color: TEXT_PRIMARY,
@@ -705,13 +660,13 @@ const styles = StyleSheet.create({
   },
   recentEmptyCard: {
     width: 240,
-    borderRadius: 14,
+    borderRadius: 16,
+    backgroundColor: CARD_SURFACE,
     borderWidth: 1,
     borderColor: CARD_BORDER,
-    backgroundColor: 'rgba(255,255,255,0.88)',
     paddingHorizontal: 16,
     paddingVertical: 18,
-    minHeight: 108,
+    minHeight: 100,
     justifyContent: 'center',
   },
   recentEmptyText: {
