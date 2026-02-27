@@ -161,7 +161,7 @@ haptic.light(); // or .medium(), .success(), .warning()
 - Screens live in `app/` using file-based routing
 - Modal screens use Stack presentation `'modal'` or `'transparentModal'`
 - Navigate with `router.push('/result/recipe/[id]')` from `expo-router`
-- IMPORTANT: Do not create new tab routes — the three tabs (home, history, settings) are final
+- Tab structure (v3.12.0): 5 tabs — Home (`index`), Care (`care`), Trip (`trip`), Product (`product`), My (`my`)
 
 ---
 

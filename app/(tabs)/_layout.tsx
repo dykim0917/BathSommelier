@@ -8,7 +8,7 @@ function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
 }) {
-  return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={22} style={{ marginBottom: -3 }} {...props} />;
 }
 
 export default function TabLayout() {
@@ -30,7 +30,7 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           borderRadius: 12,
-          marginHorizontal: 2,
+          marginHorizontal: 1,
         },
         tabBarBackground: () => null,
       }}
@@ -39,27 +39,35 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '홈',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="tint" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="care"
         options={{
-          title: '기록',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="calendar" color={color} />
-          ),
+          title: '케어',
+          tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="trip"
         options={{
-          title: '설정',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="cog" color={color} />
-          ),
+          title: '트립',
+          tabBarIcon: ({ color }) => <TabBarIcon name="map-o" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="product"
+        options={{
+          title: '제품',
+          tabBarIcon: ({ color }) => <TabBarIcon name="shopping-bag" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my"
+        options={{
+          title: '마이',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
     </Tabs>

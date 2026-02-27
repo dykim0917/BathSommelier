@@ -1,9 +1,68 @@
-# PRD — Bath Sommelier v3.10.2 (Market-first Validation + Home Orchestration)
+# PRD — Bath Sommelier v3.11.0 (Current State Baseline + Patch Roadmap)
 
-버전: v3.10.2 (Target UX Spec)  
-기준일: 2026-02-13  
-문서 목적: 목표형 제품 요구사항 + 개인화 학습 + 커머스 검증 + 법적 완충 구조를 통합 정의하며, PMF 검증 우선 순서(가설-실험-판단)를 상위 원칙으로 고정한다. Home 오케스트레이션 레이어를 중심으로 Care/Trip 엔진 및 ProductHub 구조를 정밀화하되 의료적 진단/치료 주장으로 해석될 표현은 금지한다.
+버전: v3.11.0 (Current State Baseline + Patch Roadmap)
+기준일: 2026-02-27
+문서 목적: v3.10.2(목표형 스펙)에서 v3.11.0(현재 구현 기준선)으로 업데이트. Phase 1~4 UI 리디자인 완료 상태를 공식 기준선으로 확정하고, 이후 패치 계획을 동일 문서 내에서 관리한다. 기존 섹션 1~29의 목표형 스펙 내용은 그대로 유지한다.
 알고리즘 세부 분기 초안(RFC): `/Users/exem/DK/BathSommelier/docs/ALGO_CARE_BRANCHING_RFC.md` (UI 미반영, 충돌 검토 전용)
+
+---
+
+## 0. 구현 현황 스냅샷 — v3.11.0 기준
+
+> 이 섹션은 현재 **실제 구현 완료 상태**를 추적한다. 섹션 1~29의 목표 스펙과 대조용으로 사용한다.
+
+| 영역 | 상태 | 비고 |
+|------|------|------|
+| 핵심 추천 알고리즘 (Care/Trip/Safety) | ✅ 완료 | 49개 단위 테스트 통과 |
+| 온보딩 플로우 | ✅ 완료 | Silent Moon 스타일, Phase 1 |
+| 홈 탭 오케스트레이션 | 🟡 부분 완료 | Care 8종 중 4종 구현(근육통·부종·숙취·불면), 신규 4종(감기·생리통·스트레스·우울) 미구현 |
+| 레시피 상세 화면 | ✅ 완료 | 히어로 그래디언트 + 트랙 리스트, Phase 3-1 |
+| 타이머 화면 | ✅ 완료 | 원형 재생 버튼 + 프로그레스 바, Phase 3-2 |
+| 히스토리 탭 | ✅ 완료 | 2열 그리드 + 필터 pill + 인사이트 배너, Phase 4 |
+| 완료 화면 | 🟡 구현됨 | 리디자인 미적용, 피드백/메모리 카드 동작 중 |
+| 설정 탭 | 🟡 구현됨 | 리디자인 미적용, 프로필 재설정 가능 |
+| 오디오 시스템 | 🟡 구조 완성 | .mp3 파일 미번들 (Placeholder), useDualAudioPlayer 안전 패치 완료 |
+| 커머스/ProductHub | 🟡 부분 구현 | ProductMatchingModal 컴포넌트 존재, 실 데이터 미연결 |
+| 리텐션 루프 (주간 리포트) | ❌ 미구현 | 섹션 10 참조 |
+| Analytics 이벤트 전송 | 🟡 스키마 정의됨 | 실제 전송 미구현, 구조만 준비 |
+| Skia 수면 애니메이션 | 🟡 컴포넌트 존재 | WaterAnimation.tsx 구현됨, 화면 연결 미완 |
+
+---
+
+## 0-B. UI 디자인 시스템 현황
+
+> Phase 1~4에서 확립된 디자인 언어. v3.11.0부터 공식 기준.
+
+- **디자인 레퍼런스**: Silent Moon (Figma 파일 `4452-*`)
+- **디자인 시스템 규칙**: `/CLAUDE.md` (컴포넌트 컨벤션, 토큰 사용 규칙)
+- **색상/타이포그래피 토큰**: `src/data/colors.ts` (28개 토큰)
+- **공유 StyleSheet 네임스페이스**: `src/theme/ui.ts` (`ui.*`)
+
+**핵심 패턴:**
+| 패턴 | 구현 방식 |
+|------|----------|
+| 히어로 영역 | `LinearGradient` (colorHex + `borderBottomLeftRadius: 30, borderBottomRightRadius: 30`) |
+| 카드 표면 | `CARD_SURFACE` + `CARD_BORDER` (glass-morphism) |
+| 대형 CTA 버튼 | `borderRadius: 38, height: 63` (풀폭 pill) |
+| 소형 pill 버튼 | `borderRadius: 999` |
+| 애니메이션 | `react-native-reanimated v4` |
+| 그라데이션 배경 | `expo-linear-gradient` |
+| 아이콘 | `@expo/vector-icons` (FontAwesome) |
+| 햅틱 | `useHaptic` hook (`src/hooks/useHaptic.ts`) |
+
+**Figma 화면 → 코드 매핑:**
+| Figma Node | 화면명 | 구현 파일 |
+|---|---|---|
+| 4452-6371 | Welcome Landing | `app/onboarding/welcome.tsx` |
+| 4452-6190 | Welcome Greeting | `app/onboarding/greeting.tsx` |
+| 4452-6318 | Sign Up (스타일 참고) | `app/onboarding/index.tsx`, `health.tsx` |
+| 4452-4318 | Topic Selection | `app/(tabs)/index.tsx` (CategoryCard 그리드) |
+| 4452-2712 | Home Screen | `app/(tabs)/index.tsx` (전체 레이아웃) |
+| 4452-4172 | Course Detail | `app/result/recipe/[id].tsx` |
+| 4452-6688 | Player | `app/result/timer/[id].tsx` |
+| 4452-3902 | Meditate/Browse | `app/(tabs)/history.tsx` |
+
+---
 
 ## 1. 제품 핵심가치
 BathSommelier의 핵심은 다음 한 문장으로 정의한다.
@@ -98,6 +157,54 @@ ProductHub (supporting commerce)
 - 감정 환기
 - 기분 전환
 - 몰입/리셋
+
+## 5-A. Care IntentCard Catalog (공식 8종 기준선)
+
+> 이 섹션이 Care IntentCard의 단일 소스(source of truth)다.
+> 알고리즘 세부 분기 초안: `docs/ALGO_CARE_BRANCHING_RFC.md`
+
+### 5-A.1 전체 목록
+
+| # | intent_id | 카드 제목 | 구분 | mapped_mode | SubProtocol A | SubProtocol B | 구현 상태 |
+|---|---|---|---|---|---|---|---|
+| 1 | muscle_relief | 근육통 완화 | 신체 | recovery | 하체가 뻐근해요 | 어깨/목이 뻐근해요 | ✅ 구현 |
+| 2 | edema_relief | 부종 완화 | 신체 | recovery | 하체 붓기가 심해요 | 전신이 붓는 느낌이에요 | ✅ 구현 |
+| 3 | hangover_relief | 숙취 해소 | 신체 | reset | 두통이 있고 민감해요 | 몸이 무겁고 처져요 | ✅ 구현 |
+| 4 | cold_relief | 감기 기운이 느껴질 때 | 신체 | recovery | 몸살 느낌이에요 | 코가 막히고 답답해요 | ❌ 미구현 |
+| 5 | menstrual_relief | 생리통을 달래고 싶어요 | 신체 | recovery | 하복부가 당기고 아파요 | 허리까지 뻐근해요 | ❌ 미구현 |
+| 6 | sleep_ready | 수면 준비 | 정신 | sleep | 생각이 많아요 | 예민해서 잠이 안 와요 | ✅ 구현 |
+| 7 | stress_relief | 긴장과 스트레스를 풀고 싶어요 | 정신 | reset | 몸에 긴장이 쌓였어요 | 머릿속이 너무 복잡해요 | ❌ 미구현 |
+| 8 | mood_lift | 기분이 가라앉았어요 | 정신 | sleep | 무기력하고 에너지가 없어요 | 감정이 무겁게 가라앉았어요 | ❌ 미구현 |
+
+### 5-A.2 환경 호환성 (allowed_environments)
+
+| intent_id | 욕조(bathtub) | 샤워(shower) | 부분입욕(partial_bath) | 비고 |
+|---|---|---|---|---|
+| muscle_relief | ✅ | ✅ | ✅ | |
+| edema_relief | ✅ | ✅ | ✅ | partial_bath 우선 권장 |
+| hangover_relief | ✅ | ✅ | ⚠️ 비권장 | 부분입욕 권장 안함 |
+| cold_relief | ✅ | ✅ | ✅ | partial_bath(반신욕) 우선 권장 |
+| menstrual_relief | ✅ | ✅ | ✅ | partial_bath(반신욕) 우선 권장 |
+| sleep_ready | ✅ | ✅ | ✅ | |
+| stress_relief | ✅ | ✅ | ✅ | |
+| mood_lift | ✅ | ✅ | ✅ | |
+
+### 5-A.3 카드 배치 순서 (card_position)
+
+홈 탭 2열 그리드 기준. 신체→정신 순, 안전도 고려 우선 배치.
+
+| card_position | intent_id |
+|---|---|
+| 1 | muscle_relief |
+| 2 | sleep_ready |
+| 3 | hangover_relief |
+| 4 | edema_relief |
+| 5 | cold_relief |
+| 6 | menstrual_relief |
+| 7 | stress_relief |
+| 8 | mood_lift |
+
+---
 
 ## 6. Care Intake Schema
 
@@ -1169,3 +1276,67 @@ HealthInputPolicy {
 - 내부 용어:
   - `Digital Balneotherapy Platform`은 내부 문맥에 한정
 - Reset 냉수 노출은 PMF 1단계에서 기본값으로 사용하지 않는다
+
+---
+
+## 30. CHANGELOG
+
+> 구현 변경 이력. 코드 커밋과 1:1 대응하는 것을 원칙으로 한다.
+
+### v3.11.0 — 2026-02-27 (Current State Baseline)
+
+**[UI] Phase 1 — 온보딩 플로우 Silent Moon 스타일 리디자인**
+- `app/onboarding/welcome.tsx`: 하드코딩 색상 → 토큰 교체, 한국어화
+- `app/onboarding/greeting.tsx` (신규): 그래디언트 배경 환영 인사 화면 추가
+- `app/onboarding/index.tsx`: 환경 선택 화면 레이아웃 재작성
+- `app/onboarding/health.tsx`: 건강 상태 선택 화면 레이아웃 재작성
+
+**[UI] Phase 2 — 홈 탭 리디자인**
+- `app/(tabs)/index.tsx`: CategoryCard 2열 그리드, FeaturedRoutineCard 배너 추가
+- `src/components/CategoryCard.tsx` (신규): 컬러풀 인텐트 카드
+- `src/data/colors.ts`: `CATEGORY_CARD_COLORS`, `CATEGORY_CARD_EMOJI` 추가
+
+**[UI] Phase 3-1 — 레시피 상세 화면 리디자인**
+- `app/result/recipe/[id].tsx`: 히어로 LinearGradient 섹션, 재료 트랙 리스트 스타일로 전면 재작성
+
+**[UI] Phase 3-2 — 타이머 화면 리디자인**
+- `app/result/timer/[id].tsx`: 원형 재생/일시정지 버튼(76×76), 수평 프로그레스 바, X/끝내기 버튼 추가. 기존 비즈니스 로직 전량 보존.
+
+**[UI] Phase 4 — 히스토리 탭 리디자인**
+- `app/(tabs)/history.tsx`: 2열 FlatList 그리드, 필터 pill(전체/케어/트립), 이번 달 요약 인사이트 배너
+
+**[Fix] 오디오 안전 패치**
+- `src/hooks/useDualAudioPlayer.ts`: `play()`, `pause()`, `stop()`, `seekTo()`, 볼륨/루프 설정 전 항목 try-catch 보호.
+  - 원인: `AUDIO_ASSETS`가 placeholder(빈 객체)여서 `useAudioPlayer(null)` 상태에서 `seekTo(0)` 호출 시 iOS 네이티브 예외 발생 → 타이머 끝내기 시 렌더 에러
+  - 효과: 오디오 파일 없는 상태에서도 전 화면 정상 동작
+
+**[Build] iOS 개발 빌드**
+- `app.json`: `bundleIdentifier: "com.bathsommelier.app"` 추가
+- iPhone 17 Pro 시뮬레이터 빌드/실행 성공 (`npx expo run:ios`)
+
+### v3.10.2 — 2026-02-13
+- PRD 최초 확정 (목표형 스펙)
+- Home Orchestration 레이어, Care/Trip 엔진, ProductHub 구조 정밀화
+- W01~W18 와이어프레임 명세 (`docs/WIREFRAME_V3_10_2.md`)
+- Analytics/Config/Policy 부록 v1.1 추가
+- Care 분기 알고리즘 RFC 초안 (`docs/ALGO_CARE_BRANCHING_RFC.md`)
+
+---
+
+## 31. 향후 패치 계획
+
+> v3.11.0 이후 예정 패치를 추적한다.
+> 우선순위: **P0** 즉시 수정 필요 / **P1** 다음 릴리즈 포함 / **P2** 백로그
+
+<!-- 패치 내용은 사용자가 기술 후 채울 것 -->
+
+### Patch — [날짜 미정]
+
+#### P0 — 즉시 수정
+- (패치 내용 기술 예정)
+
+#### P1 — 다음 릴리즈
+- (패치 내용 기술 예정)
+
+#### P2 — 백로그
+- (패치 내용 기술 예정)
