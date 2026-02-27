@@ -30,44 +30,45 @@ export function useDualAudioPlayer(
   const musicPlayer = useAudioPlayer(musicSource);
   const ambiencePlayer = useAudioPlayer(ambienceSource);
 
-  // Configure players when they change
+  // Configure players when they change (guard: may throw if no source loaded)
   useEffect(() => {
-    if (musicPlayer) {
+    try {
       musicPlayer.loop = true;
       musicPlayer.volume = 0.5;
-    }
+    } catch {}
   }, [musicPlayer]);
 
   useEffect(() => {
-    if (ambiencePlayer) {
+    try {
       ambiencePlayer.loop = true;
       ambiencePlayer.volume = 0.5;
-    }
+    } catch {}
   }, [ambiencePlayer]);
 
   const play = useCallback(() => {
-    musicPlayer.play();
-    ambiencePlayer.play();
+    try { musicPlayer.play(); } catch {}
+    try { ambiencePlayer.play(); } catch {}
   }, [musicPlayer, ambiencePlayer]);
 
   const pause = useCallback(() => {
-    musicPlayer.pause();
-    ambiencePlayer.pause();
+    try { musicPlayer.pause(); } catch {}
+    try { ambiencePlayer.pause(); } catch {}
   }, [musicPlayer, ambiencePlayer]);
 
   const stop = useCallback(() => {
-    musicPlayer.pause();
-    musicPlayer.seekTo(0);
-    ambiencePlayer.pause();
-    ambiencePlayer.seekTo(0);
+    // Guard seekTo — throws on iOS when no audio source is loaded (placeholder files)
+    try { musicPlayer.pause(); } catch {}
+    try { musicPlayer.seekTo(0); } catch {}
+    try { ambiencePlayer.pause(); } catch {}
+    try { ambiencePlayer.seekTo(0); } catch {}
   }, [musicPlayer, ambiencePlayer]);
 
   const setMusicVolume = useCallback((v: number) => {
-    musicPlayer.volume = Math.max(0, Math.min(1, v));
+    try { musicPlayer.volume = Math.max(0, Math.min(1, v)); } catch {}
   }, [musicPlayer]);
 
   const setAmbienceVolume = useCallback((v: number) => {
-    ambiencePlayer.volume = Math.max(0, Math.min(1, v));
+    try { ambiencePlayer.volume = Math.max(0, Math.min(1, v)); } catch {}
   }, [musicPlayer, ambiencePlayer]);
 
   return { play, pause, stop, setMusicVolume, setAmbienceVolume };
