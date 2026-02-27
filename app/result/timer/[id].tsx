@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import Animated, {
   FadeIn,
@@ -29,14 +30,15 @@ import { buildDisclosureLines } from '@/src/engine/disclosures';
 import { useDualAudioPlayer } from '@/src/hooks/useDualAudioPlayer';
 import { copy } from '@/src/content/copy';
 import {
-  APP_BG_BOTTOM,
   APP_BG_TOP,
-  BG,
-  CARD_BORDER_SOFT,
-  CARD_GLASS,
-  CARD_SHADOW_SOFT,
+  APP_BG_BOTTOM,
+  CARD_BORDER,
+  CARD_SHADOW,
+  CARD_SURFACE,
+  TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
+  TYPE_CAPTION,
 } from '@/src/data/colors';
 
 export default function TimerScreen() {
@@ -227,9 +229,21 @@ export default function TimerScreen() {
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const elapsedStr = (() => {
+    const elapsed = totalSeconds - remainingSeconds;
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  })();
+  const totalStr = (() => {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  })();
 
-  const waterProgress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 1;
-  const isShowerImmersive = recommendation.environmentUsed === 'shower' || recommendation.bathType === 'shower';
+  const progress = totalSeconds > 0 ? 1 - remainingSeconds / totalSeconds : 0;
+  const isShowerImmersive =
+    recommendation.environmentUsed === 'shower' || recommendation.bathType === 'shower';
   const timerDisclosureLines = buildDisclosureLines({
     fallbackStrategy: 'none',
     selectedMode:
@@ -243,26 +257,52 @@ export default function TimerScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Background gradient */}
       <LinearGradient
-        colors={[APP_BG_TOP + '88', APP_BG_BOTTOM + '88']}
+        colors={[APP_BG_TOP, APP_BG_BOTTOM]}
         style={StyleSheet.absoluteFillObject}
       />
+
+      {/* Water/Steam animation (subtle backdrop) */}
       {isShowerImmersive ? (
         <SteamAnimation colorHex={recommendation.colorHex} />
       ) : (
         <WaterAnimation
-          progress={waterProgress}
+          progress={progress}
           colorHex={recommendation.colorHex}
         />
       )}
 
       <Pressable style={StyleSheet.absoluteFill} onPress={toggleControls}>
         <SafeAreaView style={styles.safeArea}>
-          <View style={styles.timerContainer}>
-            <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>{copy.routine.stepRun}</Text>
-            </View>
+          {/* Top bar */}
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleExitRoutine}
+              activeOpacity={0.7}
+            >
+              <FontAwesome name="times" size={18} color={TEXT_PRIMARY} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.finishPill, { backgroundColor: recommendation.colorHex }]}
+              onPress={() => handleComplete()}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.finishPillText}>{copy.routine.timerFinish}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Center: title + timer */}
+          <View style={styles.centerSection}>
+            <Text style={styles.recipeName}>
+              {recommendation.mode === 'trip'
+                ? (recommendation.themeTitle ?? 'Trip 테마')
+                : copy.routine.stepRun}
+            </Text>
             <Text style={styles.timerText}>{timeStr}</Text>
+
             {isPaused && (
               <Animated.Text
                 entering={FadeIn.duration(300)}
@@ -274,9 +314,54 @@ export default function TimerScreen() {
             )}
           </View>
 
-          <Animated.View style={[styles.controlsContainer, controlsStyle]}>
+          {/* Controls (fade in/out on tap) */}
+          <Animated.View style={[styles.controlsArea, controlsStyle]}>
             {showControls && (
               <>
+                {/* Large circular play/pause button */}
+                <View style={styles.playRow}>
+                  <TouchableOpacity
+                    style={styles.playButton}
+                    onPress={togglePause}
+                    activeOpacity={0.85}
+                  >
+                    <FontAwesome
+                      name={isPaused ? 'play' : 'pause'}
+                      size={28}
+                      color={CARD_SURFACE}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Progress bar */}
+                <View style={styles.progressSection}>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        {
+                          width: `${Math.min(100, progress * 100)}%` as `${number}%`,
+                          backgroundColor: recommendation.colorHex,
+                        },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.progressThumb,
+                        {
+                          left: `${Math.min(100, progress * 100)}%` as `${number}%`,
+                          backgroundColor: recommendation.colorHex,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <View style={styles.progressLabels}>
+                    <Text style={styles.progressTime}>{elapsedStr}</Text>
+                    <Text style={styles.progressTime}>{totalStr}</Text>
+                  </View>
+                </View>
+
+                {/* Audio mixer */}
                 <View style={styles.mixerContainer}>
                   <AudioMixer
                     music={recommendation.music}
@@ -286,37 +371,9 @@ export default function TimerScreen() {
                     onAmbienceVolumeChange={setAmbienceVolume}
                   />
                 </View>
-
-                <View style={styles.buttonsRow}>
-                  <TouchableOpacity
-                    style={[styles.controlButton, styles.pauseButton]}
-                    onPress={togglePause}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.controlButtonText}>
-                      {isPaused ? copy.routine.timerResume : copy.routine.timerPause}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.controlButton, styles.exitButton]}
-                    onPress={handleExitRoutine}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.controlButtonText}>나가기</Text>
-                  </TouchableOpacity>
-                </View>
               </>
             )}
           </Animated.View>
-
-          <TouchableOpacity
-            style={[styles.floatingFinishButton, { backgroundColor: recommendation.colorHex }]}
-            onPress={() => handleComplete()}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.finishButtonText}>{copy.routine.timerFinish}</Text>
-          </TouchableOpacity>
 
           <View style={styles.disclosureWrap}>
             <PersistentDisclosure lines={timerDisclosureLines} />
@@ -330,7 +387,6 @@ export default function TimerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
     overflow: 'hidden',
   },
   centered: {
@@ -340,24 +396,56 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  timerContainer: {
+  // Top bar
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: CARD_SURFACE,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  finishPill: {
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  finishPillText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: CARD_SURFACE,
+  },
+  // Center
+  centerSection: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  stepBadge: {
-    marginBottom: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: CARD_BORDER_SOFT,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-  },
-  stepBadgeText: {
-    fontSize: 11,
-    color: TEXT_SECONDARY,
+  recipeName: {
+    fontSize: 18,
     fontWeight: '700',
+    color: TEXT_PRIMARY,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   timerText: {
     fontSize: 72,
@@ -369,68 +457,74 @@ const styles = StyleSheet.create({
   pausedLabel: {
     fontSize: 14,
     color: TEXT_SECONDARY,
-    marginTop: 8,
+    marginTop: 10,
     letterSpacing: 2,
   },
-  controlsContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 18,
+  // Controls
+  controlsArea: {
+    paddingHorizontal: 24,
+    paddingBottom: 8,
   },
-  mixerContainer: {
-    marginBottom: 16,
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  controlButton: {
-    flex: 1,
-    borderRadius: 18,
-    paddingVertical: 15,
+  // Play/pause circle button
+  playRow: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: CARD_BORDER_SOFT,
-    shadowColor: CARD_SHADOW_SOFT,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: 28,
   },
-  pauseButton: {
-    backgroundColor: CARD_GLASS,
-  },
-  exitButton: {
-    backgroundColor: 'rgba(255,255,255,0.74)',
-  },
-  controlButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TEXT_PRIMARY,
-  },
-  finishButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  floatingFinishButton: {
-    position: 'absolute',
-    right: 20,
-    top: 56,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: CARD_BORDER_SOFT,
-    shadowColor: CARD_SHADOW_SOFT,
+  playButton: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: TEXT_PRIMARY,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: TEXT_PRIMARY,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  disclosureWrap: {
+  // Progress bar
+  progressSection: {
+    marginBottom: 20,
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: CARD_BORDER,
+    borderRadius: 2,
+    position: 'relative',
+    marginBottom: 8,
+  },
+  progressFill: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 8,
+    left: 0,
+    top: 0,
+    height: 4,
+    borderRadius: 2,
+  },
+  progressThumb: {
+    position: 'absolute',
+    top: -5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginLeft: -7,
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  progressTime: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_MUTED,
+    fontVariant: ['tabular-nums'],
+  },
+  // Audio mixer
+  mixerContainer: {
+    marginBottom: 8,
+  },
+  // Disclosure
+  disclosureWrap: {
+    paddingHorizontal: 14,
+    paddingBottom: 8,
   },
 });
