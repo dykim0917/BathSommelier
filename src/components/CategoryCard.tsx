@@ -7,6 +7,8 @@ interface CategoryCardProps {
   subtitle: string;
   emoji: string;
   bgColor: string;
+  fitLabel?: string;
+  safetyBadge?: string;
   disabled?: boolean;
   disabledText?: string;
   onPress: () => void;
@@ -19,6 +21,8 @@ export function CategoryCard({
   subtitle,
   emoji,
   bgColor,
+  fitLabel,
+  safetyBadge,
   disabled = false,
   disabledText,
   onPress,
@@ -34,6 +38,12 @@ export function CategoryCard({
         { width, minHeight, backgroundColor: disabled ? '#E8E8E8' : bgColor },
       ]}
     >
+      {(fitLabel || safetyBadge) ? (
+        <View style={styles.badgeRow}>
+          {fitLabel ? <Text style={styles.fitBadge}>{fitLabel}</Text> : null}
+          {safetyBadge ? <Text style={styles.safetyBadge}>{safetyBadge}</Text> : null}
+        </View>
+      ) : null}
       <Text style={styles.emoji}>{emoji}</Text>
       <Text style={[styles.title, disabled && styles.titleDisabled]} numberOfLines={2}>
         {title}
@@ -56,6 +66,32 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 6,
     justifyContent: 'flex-end',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 2,
+  },
+  fitBadge: {
+    fontSize: TYPE_CAPTION - 1,
+    lineHeight: 16,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    color: '#35517E',
+    backgroundColor: 'rgba(255,255,255,0.68)',
+    fontWeight: '700',
+  },
+  safetyBadge: {
+    fontSize: TYPE_CAPTION - 1,
+    lineHeight: 16,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    color: '#7A3D00',
+    backgroundColor: 'rgba(255, 239, 222, 0.95)',
+    fontWeight: '800',
   },
   emoji: {
     fontSize: 32,

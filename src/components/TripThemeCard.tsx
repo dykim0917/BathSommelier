@@ -7,6 +7,8 @@ interface TripThemeCardProps {
   intentId: string;
   title: string;
   subtitle: string;
+  fitLabel?: string;
+  safetyBadge?: string;
   disabled?: boolean;
   disabledText?: string;
   onPress: () => void;
@@ -25,6 +27,8 @@ export function TripThemeCard({
   intentId,
   title,
   subtitle,
+  fitLabel,
+  safetyBadge,
   disabled = false,
   disabledText,
   onPress,
@@ -45,6 +49,12 @@ export function TripThemeCard({
       <View style={styles.scrim} />
 
       <View style={styles.content}>
+        {(fitLabel || safetyBadge) ? (
+          <View style={styles.badgeRow}>
+            {fitLabel ? <Text style={styles.fitBadge}>{fitLabel}</Text> : null}
+            {safetyBadge ? <Text style={styles.safetyBadge}>{safetyBadge}</Text> : null}
+          </View>
+        ) : null}
         <Text style={[styles.title, disabled && styles.titleDisabled]} numberOfLines={2}>
           {title}
         </Text>
@@ -93,6 +103,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     gap: 5,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 2,
+  },
+  fitBadge: {
+    fontSize: TYPE_CAPTION - 1,
+    lineHeight: 16,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    color: '#F2F7FF',
+    backgroundColor: 'rgba(15, 31, 53, 0.4)',
+    fontWeight: '700',
+  },
+  safetyBadge: {
+    fontSize: TYPE_CAPTION - 1,
+    lineHeight: 16,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    color: '#3B2000',
+    backgroundColor: 'rgba(255, 226, 191, 0.95)',
+    fontWeight: '800',
   },
   title: {
     color: '#FFFFFF',

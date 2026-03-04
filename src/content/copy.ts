@@ -28,6 +28,8 @@ export const copy = {
     },
     resetSafeHint: '냉수 단계는 안전을 위해 자동으로 제외됐어요.',
     noCommerceNotice: '지금은 상품 대신 루틴부터 바로 시작할 수 있어요.',
+    beginnerGuide: '처음 시작이라 안전하고 무난한 기본 추천부터 보여드려요.',
+    safetyPriorityBadge: '안전 우선 적용',
   },
   suggestion: {
     titleCare: '추천 루틴 자세히 보기',
@@ -80,6 +82,23 @@ export const copy = {
       '10~15분 진행하고 이상하면 바로 중단하세요.',
       '음주 직후에는 사용하지 마세요.',
     ],
+    evidence: {
+      title: '추천 근거',
+      defaultSafety: '권장 수온과 시간을 지키고, 불편하면 바로 중단하세요.',
+      reasonTemplates: {
+        trip: (themeTitle: string) => `${themeTitle} 테마 기반 트립 루틴으로 구성했어요.`,
+        care: (personaCode: string) => `${personaCode} 페르소나 기준으로 현재 상태에 맞췄어요.`,
+        params: (bathTypeLabel: string, temperature: number, durationLabel: string) =>
+          `${bathTypeLabel} 기준 ${temperature}°C · ${durationLabel}으로 최적화했어요.`,
+      },
+    },
+    checklist: {
+      title: '안전 체크리스트',
+      fallback: [
+        '권장 수온과 시간을 다시 확인하세요.',
+        '불편하면 즉시 중단하고 휴식하세요.',
+      ],
+    },
     startCta: '목욕 시작하기',
   },
   completion: {

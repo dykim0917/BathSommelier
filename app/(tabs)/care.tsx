@@ -49,9 +49,11 @@ import { SubProtocolPickerModal } from '@/src/components/SubProtocolPickerModal'
 import {
   CARE_INTENT_CARDS,
   CARE_SUBPROTOCOL_OPTIONS,
+  getEnvironmentFitLabel,
   getEnvironmentSubtitle,
 } from '@/src/data/intents';
 import { applySubProtocolOverrides } from '@/src/engine/subprotocol';
+import { copy } from '@/src/content/copy';
 
 const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
   { id: 'bathtub', emoji: '🛁', label: '욕조' },
@@ -132,6 +134,10 @@ function resolveFallback(intent: IntentCard, healthConditions: UserProfile['heal
     return 'RESET_WITHOUT_COLD';
   }
   return 'none';
+}
+
+function hasSafetyPriorityFallback(fallback: FallbackStrategy): boolean {
+  return fallback === 'SAFE_ROUTINE_ONLY' || fallback === 'RESET_WITHOUT_COLD';
 }
 
 export default function CareScreen() {
@@ -338,6 +344,10 @@ export default function CareScreen() {
             {ALL_CARE_CARDS.map((intent) => {
               const isPlaceholder = intent.allowed_environments.length === 0;
               const disabled = isPlaceholder || !intent.allowed_environments.includes(normalizedEnvironment);
+              const fallback = resolveFallback(intent, profile?.healthConditions ?? ['none']);
+              const safetyBadge = hasSafetyPriorityFallback(fallback)
+                ? copy.home.safetyPriorityBadge
+                : undefined;
               return (
                 <CategoryCard
                   key={intent.id}
@@ -345,6 +355,8 @@ export default function CareScreen() {
                   subtitle={isPlaceholder ? '곧 추가될 예정이에요' : getEnvironmentSubtitle(intent, normalizedEnvironment)}
                   emoji={CATEGORY_CARD_EMOJI[intent.intent_id] ?? '🛁'}
                   bgColor={CATEGORY_CARD_COLORS[intent.intent_id] ?? '#C5D9FC'}
+                  fitLabel={isPlaceholder ? undefined : getEnvironmentFitLabel(intent, normalizedEnvironment)}
+                  safetyBadge={safetyBadge}
                   disabled={disabled}
                   disabledText={isPlaceholder ? '준비 중이에요' : '현재 환경에선 제한적으로 추천돼요'}
                   onPress={() => handleOpenSubProtocol(intent)}

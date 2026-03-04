@@ -51,12 +51,14 @@ import { SubProtocolPickerModal } from '@/src/components/SubProtocolPickerModal'
 import {
   CARE_INTENT_CARDS,
   CARE_SUBPROTOCOL_OPTIONS,
+  getEnvironmentFitLabel,
   getEnvironmentSubtitle,
   getSectionOrderByContext,
   TRIP_INTENT_CARDS,
   TRIP_SUBPROTOCOL_OPTIONS,
 } from '@/src/data/intents';
 import { applySubProtocolOverrides } from '@/src/engine/subprotocol';
+import { copy } from '@/src/content/copy';
 
 const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
   { id: 'bathtub', emoji: '🛁', label: '욕조' },
@@ -199,6 +201,10 @@ function buildHeadlineMessage(timeContext: TimeContext, recent: BathRecommendati
 function modeFromIntent(intent: IntentCard): RecommendationCardEventPayload['mode_type'] {
   if (intent.domain === 'trip') return 'trip';
   return intent.mapped_mode;
+}
+
+function hasSafetyPriorityFallback(fallback: FallbackStrategy): boolean {
+  return fallback === 'SAFE_ROUTINE_ONLY' || fallback === 'RESET_WITHOUT_COLD';
 }
 
 export default function HomeIntentScreen() {
@@ -454,6 +460,9 @@ export default function HomeIntentScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>{headlineMessage}</Text>
           <Text style={styles.subtitle}>지금 환경에 맞춰 루틴을 준비했어요.</Text>
+          {recentRoutines.length === 0 ? (
+            <Text style={styles.beginnerGuide}>{copy.home.beginnerGuide}</Text>
+          ) : null}
         </View>
 
         {/* ── Environment selector ───────────────────────────────────── */}
@@ -484,6 +493,10 @@ export default function HomeIntentScreen() {
             <View style={[styles.gridWrap, { columnGap: CARD_GAP, rowGap: CARD_GAP }]}>
               {section.cards.map((intent) => {
                 const disabled = !intent.allowed_environments.includes(normalizedEnvironment);
+                const fallback = resolveFallback(intent, profile?.healthConditions ?? ['none']);
+                const safetyBadge = hasSafetyPriorityFallback(fallback)
+                  ? copy.home.safetyPriorityBadge
+                  : undefined;
                 if (section.key === 'trip') {
                   return (
                     <TripThemeCard
@@ -491,6 +504,8 @@ export default function HomeIntentScreen() {
                       intentId={intent.intent_id}
                       title={intent.copy_title}
                       subtitle={getEnvironmentSubtitle(intent, normalizedEnvironment)}
+                      fitLabel={getEnvironmentFitLabel(intent, normalizedEnvironment)}
+                      safetyBadge={safetyBadge}
                       disabled={disabled}
                       disabledText="현재 환경에선 제한적으로 추천돼요"
                       onPress={() => handleOpenSubProtocol(intent)}
@@ -506,6 +521,8 @@ export default function HomeIntentScreen() {
                     subtitle={getEnvironmentSubtitle(intent, normalizedEnvironment)}
                     emoji={CATEGORY_CARD_EMOJI[intent.intent_id] ?? '🛁'}
                     bgColor={CATEGORY_CARD_COLORS[intent.intent_id] ?? '#C5D9FC'}
+                    fitLabel={getEnvironmentFitLabel(intent, normalizedEnvironment)}
+                    safetyBadge={safetyBadge}
                     disabled={disabled}
                     disabledText="현재 환경에선 제한적으로 추천돼요"
                     onPress={() => handleOpenSubProtocol(intent)}
@@ -602,6 +619,13 @@ const styles = StyleSheet.create({
     fontSize: TYPE_SCALE.body,
     color: TEXT_MUTED,
     lineHeight: 21,
+  },
+  beginnerGuide: {
+    marginTop: 8,
+    fontSize: TYPE_SCALE.caption,
+    color: TEXT_SECONDARY,
+    lineHeight: 18,
+    fontWeight: '600',
   },
 
   // ── Environment selector ────────────────────────────────────────────

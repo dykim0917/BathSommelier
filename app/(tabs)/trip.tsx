@@ -40,11 +40,13 @@ import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { buildDisclosureLines } from '@/src/engine/disclosures';
 import { SubProtocolPickerModal } from '@/src/components/SubProtocolPickerModal';
 import {
+  getEnvironmentFitLabel,
   getEnvironmentSubtitle,
   TRIP_INTENT_CARDS,
   TRIP_SUBPROTOCOL_OPTIONS,
 } from '@/src/data/intents';
 import { applySubProtocolOverrides } from '@/src/engine/subprotocol';
+import { copy } from '@/src/content/copy';
 
 // Trip 탭: 욕조/샤워만 허용 (부분입욕 미지원)
 const TRIP_ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
@@ -114,6 +116,10 @@ function hasHighRiskCondition(conditions: UserProfile['healthConditions']): bool
 function resolveFallback(healthConditions: UserProfile['healthConditions']): FallbackStrategy {
   if (hasHighRiskCondition(healthConditions)) return 'SAFE_ROUTINE_ONLY';
   return 'none';
+}
+
+function hasSafetyPriorityFallback(fallback: FallbackStrategy): boolean {
+  return fallback === 'SAFE_ROUTINE_ONLY' || fallback === 'RESET_WITHOUT_COLD';
 }
 
 export default function TripScreen() {
@@ -323,12 +329,18 @@ export default function TripScreen() {
           <View style={[styles.gridWrap, { columnGap: CARD_GAP, rowGap: CARD_GAP }]}>
             {TRIP_INTENT_CARDS.map((intent) => {
               const disabled = !intent.allowed_environments.includes(normalizedEnvironment);
+              const fallback = resolveFallback(profile?.healthConditions ?? ['none']);
+              const safetyBadge = hasSafetyPriorityFallback(fallback)
+                ? copy.home.safetyPriorityBadge
+                : undefined;
               return (
                 <TripThemeCard
                   key={intent.id}
                   intentId={intent.intent_id}
                   title={intent.copy_title}
                   subtitle={getEnvironmentSubtitle(intent, normalizedEnvironment)}
+                  fitLabel={getEnvironmentFitLabel(intent, normalizedEnvironment)}
+                  safetyBadge={safetyBadge}
                   disabled={disabled}
                   disabledText="현재 환경에선 제한적으로 추천돼요"
                   onPress={() => handleOpenSubProtocol(intent)}

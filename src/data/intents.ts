@@ -510,3 +510,26 @@ export function getEnvironmentSubtitle(
 ): string {
   return card.copy_subtitle_by_environment[environment];
 }
+
+const ENV_LABEL: Record<CanonicalBathEnvironment, string> = {
+  bathtub: '욕조',
+  partial_bath: '부분입욕',
+  shower: '샤워',
+};
+
+export function getEnvironmentFitLabel(
+  card: IntentCard,
+  environment: CanonicalBathEnvironment
+): string {
+  const allowed = card.allowed_environments;
+  if (!allowed.includes(environment)) {
+    return `${ENV_LABEL[allowed[0] ?? 'bathtub']} 권장`;
+  }
+  if (allowed.length === 1) {
+    return `${ENV_LABEL[environment]} 전용`;
+  }
+  if (allowed.length === 3) {
+    return `${ENV_LABEL[environment]} 바로 가능`;
+  }
+  return `${ENV_LABEL[environment]} 권장`;
+}

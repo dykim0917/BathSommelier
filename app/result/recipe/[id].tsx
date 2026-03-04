@@ -21,6 +21,7 @@ import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { copy } from '@/src/content/copy';
 import { formatTemperature } from '@/src/utils/temperature';
 import { formatDuration } from '@/src/utils/time';
+import { buildRecipeEvidenceLines } from '@/src/engine/explainability';
 import {
   APP_BG_BASE,
   BTN_PRIMARY_TEXT,
@@ -32,7 +33,6 @@ import {
   TEXT_SECONDARY,
   TYPE_BODY,
   TYPE_CAPTION,
-  TYPE_HEADING_MD,
   TYPE_TITLE,
 } from '@/src/data/colors';
 
@@ -40,6 +40,12 @@ const BATH_TYPE_LABELS: Record<string, string> = {
   full: '전신욕',
   half: '반신욕',
   foot: '족욕',
+  shower: '샤워',
+};
+const ENV_LABELS: Record<string, string> = {
+  bathtub: '욕조',
+  partial_bath: '부분입욕',
+  footbath: '족욕',
   shower: '샤워',
 };
 
@@ -98,6 +104,7 @@ export default function RecipeScreen() {
     recommendation.colorHex,
     recommendation.colorHex + 'BB',
   ];
+  const evidence = buildRecipeEvidenceLines(recommendation);
 
   return (
     <View style={styles.container}>
@@ -129,6 +136,18 @@ export default function RecipeScreen() {
             </SafeAreaView>
 
             <Animated.View entering={FadeIn.duration(450)} style={styles.heroContent}>
+              <View style={styles.heroBadgeRow}>
+                <View style={styles.heroInfoBadge}>
+                  <Text style={styles.heroInfoBadgeText}>
+                    환경 적합: {ENV_LABELS[recommendation.environmentUsed] ?? '욕조'}
+                  </Text>
+                </View>
+                {recommendation.safetyWarnings.length > 0 ? (
+                  <View style={styles.heroSafetyBadge}>
+                    <Text style={styles.heroSafetyBadgeText}>{copy.home.safetyPriorityBadge}</Text>
+                  </View>
+                ) : null}
+              </View>
               <Text style={styles.heroModeLabel}>{modeLabel}</Text>
             </Animated.View>
           </LinearGradient>
@@ -141,6 +160,18 @@ export default function RecipeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <Animated.View entering={FadeInDown.duration(380).delay(40)} style={styles.evidenceCard}>
+          <Text style={styles.evidenceTitle}>{copy.routine.evidence.title}</Text>
+          {evidence.reasonLines.map((line) => (
+            <Text key={line} style={styles.evidenceText}>
+              {'\u2022'} {line}
+            </Text>
+          ))}
+          <Text style={styles.evidenceSafetyText}>
+            {'\u2022'} {evidence.safetyLine}
+          </Text>
+        </Animated.View>
+
         {/* Stats row */}
         <Animated.View
           entering={FadeInDown.duration(400).delay(80)}
@@ -316,6 +347,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 10,
   },
+  heroBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  heroInfoBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+  },
+  heroInfoBadgeText: {
+    fontSize: TYPE_CAPTION - 1,
+    color: TEXT_PRIMARY,
+    fontWeight: '700',
+  },
+  heroSafetyBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255, 226, 191, 0.95)',
+  },
+  heroSafetyBadgeText: {
+    fontSize: TYPE_CAPTION - 1,
+    color: '#6A3A00',
+    fontWeight: '800',
+  },
   heroTitle: {
     fontSize: TYPE_TITLE,
     fontWeight: '800',
@@ -340,7 +400,35 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 14,
+  },
+  evidenceCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    backgroundColor: CARD_SURFACE,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    gap: 6,
+  },
+  evidenceTitle: {
+    fontSize: TYPE_CAPTION,
+    fontWeight: '800',
+    color: TEXT_SECONDARY,
+    letterSpacing: 0.3,
+  },
+  evidenceText: {
+    fontSize: TYPE_CAPTION,
+    color: TEXT_PRIMARY,
+    lineHeight: 18,
+  },
+  evidenceSafetyText: {
+    marginTop: 1,
+    fontSize: TYPE_CAPTION,
+    color: TEXT_SECONDARY,
+    lineHeight: 18,
+    fontWeight: '700',
   },
   // Stats card
   statsCard: {

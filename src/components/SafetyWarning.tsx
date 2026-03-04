@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 import { GLASS_SHADOW, MODAL_SURFACE, TEXT_PRIMARY, WARNING_COLOR } from '@/src/data/colors';
+import { buildSafetyChecklist } from '@/src/engine/safetyChecklist';
+import { copy } from '@/src/content/copy';
 
 interface SafetyWarningProps {
   visible: boolean;
@@ -21,6 +23,7 @@ export function SafetyWarning({
   onDismiss,
 }: SafetyWarningProps) {
   if (warnings.length === 0) return null;
+  const checklist = buildSafetyChecklist(warnings);
 
   return (
     <Modal
@@ -31,11 +34,11 @@ export function SafetyWarning({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>안전 알림</Text>
+          <Text style={styles.title}>{copy.routine.checklist.title}</Text>
           <ScrollView style={styles.warningsList}>
-            {warnings.map((w, i) => (
-              <Text key={i} style={styles.warningText}>
-                {w}
+            {checklist.map((item) => (
+              <Text key={item} style={styles.warningText}>
+                {'\u2022'} {item}
               </Text>
             ))}
           </ScrollView>
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: TEXT_PRIMARY,
     lineHeight: 22,
-    marginBottom: 10,
+    marginBottom: 11,
   },
   button: {
     backgroundColor: WARNING_COLOR,
