@@ -11,7 +11,9 @@ import Animated, { FadeIn, BounceIn } from 'react-native-reanimated';
 import { BathRecommendation, BathFeedback } from '@/src/engine/types';
 import { getRecommendationById, getMonthlyCount, updateRecommendationFeedback } from '@/src/storage/history';
 import { clearSession, loadSession } from '@/src/storage/session';
+import { patchSessionRecord } from '@/src/storage/sessionLog';
 import { applyFeedbackToThemePreference, saveCompletionMemory } from '@/src/storage/memory';
+import { mapFeedbackToFeelingAfter } from '@/src/engine/feeling';
 import { getTimeBasedMessage } from '@/src/utils/messages';
 import { GradientBackground } from '@/src/components/GradientBackground';
 import { copy } from '@/src/content/copy';
@@ -62,6 +64,10 @@ export default function CompletionScreen() {
         session?.recommendationId === id && session.actualDurationSeconds !== undefined
           ? Math.max(1, Math.round(session.actualDurationSeconds / 60))
           : rec.durationMinutes;
+      const completedAt =
+        session?.recommendationId === id && session.completedAt
+          ? session.completedAt
+          : rec.createdAt;
 
       const memory = await saveCompletionMemory(rec, null, {
         completedAt:
@@ -69,6 +75,10 @@ export default function CompletionScreen() {
             ? session.completedAt
             : undefined,
         durationMinutes: actualDurationMinutes,
+      });
+      await patchSessionRecord(id, {
+        date: completedAt,
+        duration: actualDurationMinutes,
       });
       setMemoryNarrative(memory.narrativeRecallCard);
       if (memory.themeId) {
@@ -93,6 +103,9 @@ export default function CompletionScreen() {
     if (!id || feedback) return;
     setFeedback(value);
     await updateRecommendationFeedback(id, value);
+    await patchSessionRecord(id, {
+      user_feeling_after: mapFeedbackToFeelingAfter(value),
+    });
     if (recommendation?.themeId) {
       const next = await applyFeedbackToThemePreference(recommendation.themeId, value);
       setThemeWeight(next);

@@ -19,7 +19,9 @@ import { generateCareRecommendation, generateTripRecommendation } from '@/src/en
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import { loadHistory, saveRecommendation } from '@/src/storage/history';
+import { upsertSessionRecord } from '@/src/storage/sessionLog';
 import { loadLastEnvironment, saveLastEnvironment } from '@/src/storage/environment';
+import { loadTripMemoryHistory } from '@/src/storage/memory';
 import { SafetyWarning } from '@/src/components/SafetyWarning';
 import {
   ACCENT,
@@ -58,6 +60,8 @@ import {
   TRIP_SUBPROTOCOL_OPTIONS,
 } from '@/src/data/intents';
 import { applySubProtocolOverrides } from '@/src/engine/subprotocol';
+import { inferFeelingBefore } from '@/src/engine/feeling';
+import { buildHomeStreakSummary, HomeStreakSummary } from '@/src/engine/streaks';
 import { copy } from '@/src/content/copy';
 
 const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
@@ -215,6 +219,9 @@ export default function HomeIntentScreen() {
   const [environment, setEnvironment] = useState<BathEnvironment>('bathtub');
   const [recentRoutines, setRecentRoutines] = useState<BathRecommendation[]>([]);
   const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
+  const [streakSummary, setStreakSummary] = useState<HomeStreakSummary>(
+    buildHomeStreakSummary([])
+  );
 
   const [warningVisible, setWarningVisible] = useState(false);
   const [pendingWarnings, setPendingWarnings] = useState<string[]>([]);
@@ -241,9 +248,14 @@ export default function HomeIntentScreen() {
     });
 
     setIsHistoryLoaded(false);
-    loadHistory()
-      .then((history) => {
+    Promise.all([loadHistory(), loadTripMemoryHistory()])
+      .then(([history, memories]) => {
         setRecentRoutines(history.slice(0, 8));
+        setStreakSummary(
+          buildHomeStreakSummary(
+            memories.map((memory) => memory.completionSnapshot.completedAt)
+          )
+        );
       })
       .finally(() => {
         setIsHistoryLoaded(true);
@@ -433,6 +445,16 @@ export default function HomeIntentScreen() {
     );
 
     await saveRecommendation(recommendation);
+    await upsertSessionRecord({
+      id: recommendation.id,
+      date: recommendation.createdAt,
+      mode: recommendation.mode,
+      trip_name: recommendation.mode === 'trip' ? recommendation.themeTitle ?? null : null,
+      temperature: recommendation.temperature.recommended,
+      duration: recommendation.durationMinutes,
+      user_feeling_before: inferFeelingBefore(recommendation.intentId, recommendation.mode),
+      user_feeling_after: 3,
+    });
     setSubModalVisible(false);
     setSelectedIntent(null);
     setSelectedIntentPayload(null);
@@ -469,6 +491,32 @@ export default function HomeIntentScreen() {
           {isHistoryLoaded && recentRoutines.length === 0 ? (
             <Text style={styles.beginnerGuide}>{copy.home.beginnerGuide}</Text>
           ) : null}
+        </View>
+
+        <View style={styles.streakCard}>
+          <Text style={styles.streakTitle}>{copy.home.streakTitle}</Text>
+          <Text style={styles.streakTodayText}>
+            {streakSummary.todayDone ? copy.home.todayDone : copy.home.todayPending}
+          </Text>
+          <View style={styles.streakWeekRow}>
+            {streakSummary.dailyCheck.map((item) => (
+              <View key={item.dateKey} style={styles.streakDayItem}>
+                <Text style={[styles.streakDayLabel, item.isToday && styles.streakTodayLabel]}>
+                  {item.weekdayLabel}
+                </Text>
+                <Text style={[styles.streakDayMark, item.done && styles.streakDayMarkDone]}>
+                  {item.done ? '✔' : '-'}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.streakCountText}>
+            {copy.home.weeklyCount(streakSummary.weeklyBathCount, streakSummary.weeklyGoal)}
+          </Text>
+          <Text style={styles.streakMetaText}>
+            {copy.home.dailyStreak(streakSummary.dailyStreakDays)} {'\u00b7'}{' '}
+            {copy.home.weeklyStreak(streakSummary.weeklyStreakWeeks)}
+          </Text>
         </View>
 
         {/* ── Environment selector ───────────────────────────────────── */}
@@ -632,6 +680,73 @@ const styles = StyleSheet.create({
     color: TEXT_SECONDARY,
     lineHeight: 18,
     fontWeight: '600',
+  },
+  streakCard: {
+    borderRadius: 16,
+    backgroundColor: CARD_SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 8,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 7,
+    elevation: 2,
+  },
+  streakTitle: {
+    color: TEXT_PRIMARY,
+    fontWeight: '800',
+    fontSize: TYPE_SCALE.body,
+    lineHeight: 21,
+  },
+  streakTodayText: {
+    color: TEXT_SECONDARY,
+    fontWeight: '600',
+    fontSize: TYPE_SCALE.caption,
+    lineHeight: 18,
+  },
+  streakWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    columnGap: 6,
+  },
+  streakDayItem: {
+    alignItems: 'center',
+    gap: 2,
+    minWidth: 36,
+  },
+  streakDayLabel: {
+    color: TEXT_SECONDARY,
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  streakTodayLabel: {
+    color: ACCENT,
+    fontWeight: '700',
+  },
+  streakDayMark: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_SCALE.caption,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  streakDayMarkDone: {
+    color: ACCENT,
+  },
+  streakCountText: {
+    color: TEXT_PRIMARY,
+    fontSize: TYPE_SCALE.body,
+    fontWeight: '700',
+    lineHeight: 21,
+  },
+  streakMetaText: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_SCALE.caption,
+    fontWeight: '600',
+    lineHeight: 18,
   },
 
   // ── Environment selector ────────────────────────────────────────────

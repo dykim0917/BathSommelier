@@ -205,6 +205,7 @@ export interface ThemePreset {
 
 // --- Feedback ---
 export type BathFeedback = 'good' | 'bad' | null;
+export type FeelingScore = 1 | 2 | 3 | 4 | 5;
 
 // --- Active Session (ephemeral) ---
 export interface BathSession {
@@ -213,6 +214,17 @@ export interface BathSession {
   completedAt?: string;
   feedback?: BathFeedback;
   actualDurationSeconds?: number;
+}
+
+export interface BathSessionRecord {
+  id: string;
+  date: string;
+  mode: RecommendationMode;
+  trip_name: string | null;
+  temperature: number;
+  duration: number | null;
+  user_feeling_before: FeelingScore;
+  user_feeling_after: FeelingScore;
 }
 
 export interface CompletionSnapshot {

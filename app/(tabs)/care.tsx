@@ -18,6 +18,7 @@ import { generateCareRecommendation } from '@/src/engine/recommend';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useHaptic } from '@/src/hooks/useHaptic';
 import { saveRecommendation } from '@/src/storage/history';
+import { upsertSessionRecord } from '@/src/storage/sessionLog';
 import { loadLastEnvironment, saveLastEnvironment } from '@/src/storage/environment';
 import { SafetyWarning } from '@/src/components/SafetyWarning';
 import {
@@ -53,6 +54,7 @@ import {
   getEnvironmentSubtitle,
 } from '@/src/data/intents';
 import { applySubProtocolOverrides } from '@/src/engine/subprotocol';
+import { inferFeelingBefore } from '@/src/engine/feeling';
 import { copy } from '@/src/content/copy';
 
 const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
@@ -275,6 +277,16 @@ export default function CareScreen() {
     );
 
     await saveRecommendation(recommendation);
+    await upsertSessionRecord({
+      id: recommendation.id,
+      date: recommendation.createdAt,
+      mode: recommendation.mode,
+      trip_name: recommendation.mode === 'trip' ? recommendation.themeTitle ?? null : null,
+      temperature: recommendation.temperature.recommended,
+      duration: recommendation.durationMinutes,
+      user_feeling_before: inferFeelingBefore(recommendation.intentId, recommendation.mode),
+      user_feeling_after: 3,
+    });
     setSubModalVisible(false);
     setSelectedIntent(null);
     setSelectedIntentPayload(null);

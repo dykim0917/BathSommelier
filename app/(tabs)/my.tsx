@@ -18,6 +18,7 @@ import { BathEnvironment, BathRecommendation, HealthCondition, TripMemoryRecord 
 import { loadHistory } from '@/src/storage/history';
 import { loadThemePreferenceWeights, loadTripMemoryHistory } from '@/src/storage/memory';
 import { buildHistoryInsights } from '@/src/engine/historyInsights';
+import { buildHomeStreakSummary } from '@/src/engine/streaks';
 import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { THEME_BY_ID } from '@/src/data/themes';
 import { copy } from '@/src/content/copy';
@@ -134,6 +135,13 @@ function HistorySection() {
     () => buildHistoryInsights(history, memoryHistory),
     [history, memoryHistory]
   );
+  const streakSummary = useMemo(
+    () =>
+      buildHomeStreakSummary(
+        memoryHistory.map((memory) => memory.completionSnapshot.completedAt)
+      ),
+    [memoryHistory]
+  );
 
   const filteredHistory = useMemo(() => {
     if (filterMode === 'all') return history;
@@ -189,6 +197,32 @@ function HistorySection() {
           ? `총 ${history.length}개의 루틴을 완료했어요`
           : '첫 루틴을 시작해보세요'}
       </Text>
+
+      <View style={styles.streakCard}>
+        <Text style={styles.streakTitle}>{copy.home.streakTitle}</Text>
+        <Text style={styles.streakTodayText}>
+          {streakSummary.todayDone ? copy.home.todayDone : copy.home.todayPending}
+        </Text>
+        <View style={styles.streakWeekRow}>
+          {streakSummary.dailyCheck.map((item) => (
+            <View key={item.dateKey} style={styles.streakDayItem}>
+              <Text style={[styles.streakDayLabel, item.isToday && styles.streakTodayLabel]}>
+                {item.weekdayLabel}
+              </Text>
+              <Text style={[styles.streakDayMark, item.done && styles.streakDayMarkDone]}>
+                {item.done ? '✔' : '-'}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <Text style={styles.streakCountText}>
+          {copy.home.weeklyCount(streakSummary.weeklyBathCount, streakSummary.weeklyGoal)}
+        </Text>
+        <Text style={styles.streakMetaText}>
+          {copy.home.dailyStreak(streakSummary.dailyStreakDays)} {'\u00b7'}{' '}
+          {copy.home.weeklyStreak(streakSummary.weeklyStreakWeeks)}
+        </Text>
+      </View>
 
       {history.length > 0 && (
         <View style={styles.insightBanner}>
@@ -534,6 +568,74 @@ const styles = StyleSheet.create({
     fontSize: TYPE_BODY,
     color: TEXT_MUTED,
     marginBottom: 16,
+  },
+  streakCard: {
+    borderRadius: 16,
+    backgroundColor: CARD_SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 8,
+    marginBottom: 16,
+    shadowColor: CARD_SHADOW,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  streakTitle: {
+    color: TEXT_PRIMARY,
+    fontWeight: '800',
+    fontSize: TYPE_BODY,
+    lineHeight: 20,
+  },
+  streakTodayText: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_CAPTION,
+    fontWeight: '600',
+    lineHeight: 17,
+  },
+  streakWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    columnGap: 6,
+  },
+  streakDayItem: {
+    alignItems: 'center',
+    gap: 2,
+    minWidth: 35,
+  },
+  streakDayLabel: {
+    color: TEXT_SECONDARY,
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  streakTodayLabel: {
+    color: ACCENT,
+    fontWeight: '700',
+  },
+  streakDayMark: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_CAPTION,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
+  streakDayMarkDone: {
+    color: ACCENT,
+  },
+  streakCountText: {
+    color: TEXT_PRIMARY,
+    fontSize: TYPE_BODY,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  streakMetaText: {
+    color: TEXT_SECONDARY,
+    fontSize: TYPE_CAPTION,
+    fontWeight: '600',
+    lineHeight: 17,
   },
   insightBanner: {
     flexDirection: 'row',

@@ -30,6 +30,12 @@ export const copy = {
     noCommerceNotice: '지금은 상품 대신 루틴부터 바로 시작할 수 있어요.',
     beginnerGuide: '처음 시작이라 안전하고 무난한 기본 추천부터 보여드려요.',
     safetyPriorityBadge: '안전 우선 적용',
+    streakTitle: '이번주 루틴',
+    todayDone: '오늘 Bath 완료 ✔',
+    todayPending: '오늘 Bath 미완료 -',
+    weeklyCount: (count: number, goal: number) => `${count} / ${goal} baths this week`,
+    dailyStreak: (days: number) => `${days} day streak`,
+    weeklyStreak: (weeks: number) => `${weeks} weeks active`,
   },
   suggestion: {
     titleCare: '추천 루틴 자세히 보기',

@@ -6,4 +6,5 @@ export const STORAGE_KEYS = {
   LAST_ENVIRONMENT: '@bath_sommelier/last_environment',
   TRIP_MEMORY_HISTORY: '@bath_sommelier/trip_memory_history',
   THEME_PREFERENCE_WEIGHTS: '@bath_sommelier/theme_preference_weights',
+  BATH_SESSION_LOG: '@bath_sommelier/bath_session_log',
 } as const;
