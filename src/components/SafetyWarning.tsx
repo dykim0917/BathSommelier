@@ -7,7 +7,13 @@ import {
   Text,
   View,
 } from 'react-native';
-import { GLASS_SHADOW, MODAL_SURFACE, TEXT_PRIMARY, WARNING_COLOR } from '@/src/data/colors';
+import {
+  GLASS_SHADOW,
+  MODAL_SURFACE,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  WARNING_COLOR,
+} from '@/src/data/colors';
 import { buildSafetyChecklist } from '@/src/engine/safetyChecklist';
 import { copy } from '@/src/content/copy';
 
@@ -36,6 +42,13 @@ export function SafetyWarning({
         <View style={styles.card}>
           <Text style={styles.title}>{copy.routine.checklist.title}</Text>
           <ScrollView style={styles.warningsList}>
+            <Text style={styles.sectionTitle}>주의사항</Text>
+            {warnings.map((item, index) => (
+              <Text key={`${item}-${index}`} style={styles.warningText}>
+                {'\u2022'} {item}
+              </Text>
+            ))}
+            <Text style={styles.sectionTitle}>실천 체크리스트</Text>
             {checklist.map((item) => (
               <Text key={item} style={styles.warningText}>
                 {'\u2022'} {item}
@@ -89,6 +102,13 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY,
     lineHeight: 22,
     marginBottom: 11,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: TEXT_SECONDARY,
+    marginBottom: 8,
+    marginTop: 4,
   },
   button: {
     backgroundColor: WARNING_COLOR,

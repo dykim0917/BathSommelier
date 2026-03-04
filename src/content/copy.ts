@@ -87,7 +87,7 @@ export const copy = {
       defaultSafety: '권장 수온과 시간을 지키고, 불편하면 바로 중단하세요.',
       reasonTemplates: {
         trip: (themeTitle: string) => `${themeTitle} 테마 기반 트립 루틴으로 구성했어요.`,
-        care: (personaCode: string) => `${personaCode} 페르소나 기준으로 현재 상태에 맞췄어요.`,
+        care: (personaLabel: string) => `${personaLabel} 기준으로 현재 상태에 맞췄어요.`,
         params: (bathTypeLabel: string, temperature: number, durationLabel: string) =>
           `${bathTypeLabel} 기준 ${temperature}°C · ${durationLabel}으로 최적화했어요.`,
       },

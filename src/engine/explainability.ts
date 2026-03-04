@@ -1,5 +1,6 @@
 import { BathRecommendation } from './types';
 import { copy } from '@/src/content/copy';
+import { toPersonaLabel } from './personaLabel';
 
 const BATH_TYPE_LABELS: Record<BathRecommendation['bathType'], string> = {
   full: '전신욕',
@@ -22,7 +23,7 @@ export function buildRecipeEvidenceLines(recommendation: BathRecommendation): {
       ? copy.routine.evidence.reasonTemplates.trip(
           recommendation.themeTitle ?? '오늘의'
         )
-      : copy.routine.evidence.reasonTemplates.care(recommendation.persona);
+      : copy.routine.evidence.reasonTemplates.care(toPersonaLabel(recommendation.persona));
 
   const reasonLine2 = copy.routine.evidence.reasonTemplates.params(
     BATH_TYPE_LABELS[recommendation.bathType],

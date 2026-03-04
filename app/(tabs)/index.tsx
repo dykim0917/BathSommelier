@@ -214,6 +214,7 @@ export default function HomeIntentScreen() {
 
   const [environment, setEnvironment] = useState<BathEnvironment>('bathtub');
   const [recentRoutines, setRecentRoutines] = useState<BathRecommendation[]>([]);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
 
   const [warningVisible, setWarningVisible] = useState(false);
   const [pendingWarnings, setPendingWarnings] = useState<string[]>([]);
@@ -239,9 +240,14 @@ export default function HomeIntentScreen() {
       }
     });
 
-    loadHistory().then((history) => {
-      setRecentRoutines(history.slice(0, 8));
-    });
+    setIsHistoryLoaded(false);
+    loadHistory()
+      .then((history) => {
+        setRecentRoutines(history.slice(0, 8));
+      })
+      .finally(() => {
+        setIsHistoryLoaded(true);
+      });
   }, [profile]);
 
   const timeContext = useMemo(() => getTimeContext(), []);
@@ -460,7 +466,7 @@ export default function HomeIntentScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>{headlineMessage}</Text>
           <Text style={styles.subtitle}>지금 환경에 맞춰 루틴을 준비했어요.</Text>
-          {recentRoutines.length === 0 ? (
+          {isHistoryLoaded && recentRoutines.length === 0 ? (
             <Text style={styles.beginnerGuide}>{copy.home.beginnerGuide}</Text>
           ) : null}
         </View>

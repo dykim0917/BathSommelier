@@ -24,7 +24,8 @@ describe('buildRecipeEvidenceLines', () => {
   test('returns 2 reason lines and fallback safety for care recommendation', () => {
     const result = buildRecipeEvidenceLines(baseRecommendation);
     expect(result.reasonLines).toHaveLength(2);
-    expect(result.reasonLines[0]).toContain('P3_MUSCLE');
+    expect(result.reasonLines[0]).toContain('근육 케어');
+    expect(result.reasonLines[0]).not.toContain('P3_MUSCLE');
     expect(result.reasonLines[1]).toContain('40°C');
     expect(result.safetyLine).toContain('권장 수온');
   });
