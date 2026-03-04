@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Alert,
   View,
   Text,
   TouchableOpacity,
@@ -21,7 +20,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { BathRecommendation } from '@/src/engine/types';
 import { getRecommendationById } from '@/src/storage/history';
-import { clearSession, saveSession, updateSessionCompletion } from '@/src/storage/session';
+import { saveSession, updateSessionCompletion } from '@/src/storage/session';
 import { WaterAnimation } from '@/src/components/WaterAnimation';
 import { SteamAnimation } from '@/src/components/SteamAnimation';
 import { AudioMixer } from '@/src/components/AudioMixer';
@@ -198,26 +197,6 @@ export default function TimerScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const handleExitRoutine = () => {
-    Alert.alert(
-      '루틴 중단',
-      '지금 나가면 진행 중인 루틴은 완료로 기록되지 않습니다. 나갈까요?',
-      [
-        { text: '계속 진행', style: 'cancel' },
-        {
-          text: '나가기',
-          style: 'destructive',
-          onPress: async () => {
-            clearTimer();
-            stopAudio();
-            await clearSession();
-            router.replace('/(tabs)');
-          },
-        },
-      ]
-    );
-  };
-
   if (!recommendation) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -277,14 +256,6 @@ export default function TimerScreen() {
         <SafeAreaView style={styles.safeArea}>
           {/* Top bar */}
           <View style={styles.topBar}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={handleExitRoutine}
-              activeOpacity={0.7}
-            >
-              <FontAwesome name="times" size={18} color={TEXT_PRIMARY} />
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.finishPill, { backgroundColor: recommendation.colorHex }]}
               onPress={() => handleComplete()}
@@ -400,23 +371,10 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: CARD_SURFACE,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 2,
   },
   finishPill: {
     borderRadius: 999,

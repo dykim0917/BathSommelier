@@ -72,15 +72,6 @@ export default function OnboardingEnvironment() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Back arrow */}
-      <TouchableOpacity
-        style={styles.backButton}
-        activeOpacity={0.7}
-        onPress={() => router.back()}
-      >
-        <FontAwesome name="angle-left" size={28} color={TEXT_PRIMARY} />
-      </TouchableOpacity>
-
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>나의 목욕 환경을{'\n'}알려주세요</Text>
@@ -138,15 +129,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: APP_BG_BASE,
-  },
-  backButton: {
-    marginLeft: 20,
-    marginTop: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   container: {
     flex: 1,
@@ -220,10 +202,10 @@ const styles = StyleSheet.create({
   nextButton: {
     backgroundColor: BTN_PRIMARY,
     borderRadius: 38,
-    height: 63,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   nextButtonDisabled: {
     backgroundColor: BTN_DISABLED,

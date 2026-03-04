@@ -66,6 +66,66 @@ export const CARE_INTENT_CARDS: IntentCard[] = [
     default_subprotocol_id: 'edema_lower',
     card_position: 4,
   },
+  {
+    id: 'care_cold_relief',
+    domain: 'care',
+    intent_id: 'cold_relief',
+    mapped_mode: 'recovery',
+    allowed_environments: ['bathtub', 'partial_bath'],
+    copy_title: '감기 기운이 느껴질 때',
+    copy_subtitle_by_environment: {
+      shower: '샤워보다 욕조나 부분입욕을 권장해요.',
+      bathtub: '욕조 10분으로 따뜻하게 체온을 높여요.',
+      partial_bath: '부분입욕 12분으로 면역 리듬을 만들어요.',
+    },
+    default_subprotocol_id: 'cold_warm',
+    card_position: 5,
+  },
+  {
+    id: 'care_menstrual_relief',
+    domain: 'care',
+    intent_id: 'menstrual_relief',
+    mapped_mode: 'recovery',
+    allowed_environments: ['bathtub', 'partial_bath'],
+    copy_title: '생리통이 있을 때',
+    copy_subtitle_by_environment: {
+      shower: '욕조 또는 부분입욕이 더 효과적이에요.',
+      bathtub: '욕조 12분으로 아랫배를 따뜻하게 풀어요.',
+      partial_bath: '부분입욕 15분으로 하체를 집중적으로 덥혀요.',
+    },
+    default_subprotocol_id: 'menstrual_warm',
+    card_position: 6,
+  },
+  {
+    id: 'care_stress_relief',
+    domain: 'care',
+    intent_id: 'stress_relief',
+    mapped_mode: 'reset',
+    allowed_environments: ['bathtub', 'shower', 'partial_bath'],
+    copy_title: '스트레스를 풀고 싶을 때',
+    copy_subtitle_by_environment: {
+      shower: '샤워 6분으로 긴장을 빠르게 해소해요.',
+      bathtub: '욕조 12분으로 완전히 내려놓는 시간이에요.',
+      partial_bath: '부분입욕 10분으로 차분하게 전환해요.',
+    },
+    default_subprotocol_id: 'stress_deep',
+    card_position: 7,
+  },
+  {
+    id: 'care_mood_lift',
+    domain: 'care',
+    intent_id: 'mood_lift',
+    mapped_mode: 'sleep',
+    allowed_environments: ['bathtub', 'shower', 'partial_bath'],
+    copy_title: '기분 전환이 필요할 때',
+    copy_subtitle_by_environment: {
+      shower: '샤워 5분으로 기분 리셋을 시작해요.',
+      bathtub: '욕조 10분으로 기분을 부드럽게 들어올려요.',
+      partial_bath: '부분입욕 10분으로 감각을 깨워요.',
+    },
+    default_subprotocol_id: 'mood_warm',
+    card_position: 8,
+  },
 ];
 
 export const TRIP_INTENT_CARDS: IntentCard[] = [
@@ -237,6 +297,104 @@ export const CARE_SUBPROTOCOL_OPTIONS: Record<string, SubProtocolOption[]> = {
       is_default: false,
       partialOverrides: {
         behavior_blocks: ['단계 전환 1회'],
+      },
+    },
+  ],
+  cold_relief: [
+    {
+      id: 'cold_warm',
+      intent_id: 'cold_relief',
+      label: '몸이 으슬으슬해요',
+      hint: '체온을 천천히 높여 면역 리듬을 만들어요.',
+      is_default: true,
+      partialOverrides: {
+        behavior_blocks: ['체온 유지 구간 1회'],
+        duration_delta: 2,
+        environment_bias: 'bathtub',
+      },
+    },
+    {
+      id: 'cold_gentle',
+      intent_id: 'cold_relief',
+      label: '몸이 약한 상태예요',
+      hint: '자극 없이 순하게 진행해요.',
+      is_default: false,
+      partialOverrides: {
+        behavior_blocks: ['순한 안정 루틴'],
+        duration_delta: -2,
+      },
+    },
+  ],
+  menstrual_relief: [
+    {
+      id: 'menstrual_warm',
+      intent_id: 'menstrual_relief',
+      label: '아랫배가 아파요',
+      hint: '온열 중심으로 아랫배를 풀어줘요.',
+      is_default: true,
+      partialOverrides: {
+        behavior_blocks: ['온열 유지 구간 1회'],
+        duration_delta: 3,
+        environment_bias: 'bathtub',
+      },
+    },
+    {
+      id: 'menstrual_gentle',
+      intent_id: 'menstrual_relief',
+      label: '몸 전체가 무거워요',
+      hint: '순하게 이완하며 피로를 풀어요.',
+      is_default: false,
+      partialOverrides: {
+        behavior_blocks: ['순한 이완 루틴'],
+      },
+    },
+  ],
+  stress_relief: [
+    {
+      id: 'stress_deep',
+      intent_id: 'stress_relief',
+      label: '머릿속이 복잡해요',
+      hint: '호흡 중심으로 생각을 비워드려요.',
+      is_default: true,
+      partialOverrides: {
+        behavior_blocks: ['호흡 2분'],
+        lighting_adjustment: '조명 점진 감소',
+        duration_delta: 2,
+      },
+    },
+    {
+      id: 'stress_quick',
+      intent_id: 'stress_relief',
+      label: '빠르게 전환하고 싶어요',
+      hint: '짧고 강하게 리듬을 바꿔요.',
+      is_default: false,
+      partialOverrides: {
+        behavior_blocks: ['빠른 리듬 전환'],
+        duration_delta: -2,
+      },
+    },
+  ],
+  mood_lift: [
+    {
+      id: 'mood_warm',
+      intent_id: 'mood_lift',
+      label: '기분이 처져 있어요',
+      hint: '따뜻함으로 기분을 부드럽게 들어올려요.',
+      is_default: true,
+      partialOverrides: {
+        behavior_blocks: ['기분 전환 구간 1회'],
+        lighting_adjustment: '따뜻한 조명',
+      },
+    },
+    {
+      id: 'mood_active',
+      intent_id: 'mood_lift',
+      label: '활기를 되찾고 싶어요',
+      hint: '조금 더 활기차게 시작해요.',
+      is_default: false,
+      partialOverrides: {
+        behavior_blocks: ['활성화 루틴 1회'],
+        duration_delta: 1,
       },
     },
   ],

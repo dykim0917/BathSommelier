@@ -21,14 +21,12 @@ import { SafetyWarning } from '@/src/components/SafetyWarning';
 import {
   ACCENT,
   APP_BG_BASE,
-  CATEGORY_CARD_COLORS,
-  CATEGORY_CARD_EMOJI,
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   TYPE_SCALE,
 } from '@/src/data/colors';
-import { CategoryCard } from '@/src/components/CategoryCard';
+import { TripThemeCard } from '@/src/components/TripThemeCard';
 import {
   RecommendationCardEventPayload,
   trackIntentCardClick,
@@ -121,7 +119,7 @@ function resolveFallback(healthConditions: UserProfile['healthConditions']): Fal
 export default function TripScreen() {
   const { profile } = useUserProfile();
   const haptic = useHaptic();
-  const { width: screenWidth, fontScale } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [environment, setEnvironment] = useState<BathEnvironment>('bathtub');
   const [warningVisible, setWarningVisible] = useState(false);
@@ -150,9 +148,9 @@ export default function TripScreen() {
 
   const normalizedEnvironment = normalizeEnvironmentInput(environment);
 
-  const useSingleColumn = screenWidth < 380 || fontScale >= 1.15;
+  const useSingleColumn = screenWidth < 340;
   const gridColumns = useSingleColumn ? 1 : 2;
-  const sectionInnerWidth = Math.max(220, screenWidth - SCREEN_HORIZONTAL_PADDING * 2 - 32);
+  const sectionInnerWidth = Math.max(220, screenWidth - SCREEN_HORIZONTAL_PADDING * 2);
   const intentCardWidth = gridColumns === 2 ? (sectionInnerWidth - CARD_GAP) / 2 : sectionInnerWidth;
 
   useEffect(() => {
@@ -326,12 +324,11 @@ export default function TripScreen() {
             {TRIP_INTENT_CARDS.map((intent) => {
               const disabled = !intent.allowed_environments.includes(normalizedEnvironment);
               return (
-                <CategoryCard
+                <TripThemeCard
                   key={intent.id}
+                  intentId={intent.intent_id}
                   title={intent.copy_title}
                   subtitle={getEnvironmentSubtitle(intent, normalizedEnvironment)}
-                  emoji={CATEGORY_CARD_EMOJI[intent.intent_id] ?? '🌿'}
-                  bgColor={CATEGORY_CARD_COLORS[intent.intent_id] ?? '#C5D9FC'}
                   disabled={disabled}
                   disabledText="현재 환경에선 제한적으로 추천돼요"
                   onPress={() => handleOpenSubProtocol(intent)}

@@ -12,7 +12,8 @@ import {
   BTN_PRIMARY,
   BTN_PRIMARY_TEXT,
   CARD_BORDER,
-  CARD_SURFACE,
+  MODAL_SUB_SURFACE,
+  MODAL_SURFACE,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   TYPE_SCALE,
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
   },
   card: {
     maxHeight: '82%',
-    backgroundColor: CARD_SURFACE,
+    backgroundColor: MODAL_SURFACE,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderWidth: 1,
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     borderColor: CARD_BORDER,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: MODAL_SUB_SURFACE,
   },
   chipText: {
     color: TEXT_SECONDARY,

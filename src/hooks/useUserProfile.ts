@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UserProfile } from '@/src/engine/types';
-import { saveProfile, loadProfile } from '@/src/storage/profile';
+import { saveProfile, loadProfile, clearProfile } from '@/src/storage/profile';
 
 export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -31,5 +31,10 @@ export function useUserProfile() {
     [profile]
   );
 
-  return { profile, loading, save, update };
+  const clear = useCallback(async () => {
+    await clearProfile();
+    setProfile(null);
+  }, []);
+
+  return { profile, loading, save, update, clear };
 }

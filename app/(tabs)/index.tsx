@@ -27,8 +27,6 @@ import {
   CARD_BORDER,
   CARD_SHADOW,
   CARD_SURFACE,
-  CATEGORY_CARD_COLORS,
-  CATEGORY_CARD_EMOJI,
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
@@ -36,6 +34,8 @@ import {
   WARNING_COLOR,
 } from '@/src/data/colors';
 import { CategoryCard } from '@/src/components/CategoryCard';
+import { TripThemeCard } from '@/src/components/TripThemeCard';
+import { CATEGORY_CARD_COLORS, CATEGORY_CARD_EMOJI } from '@/src/data/colors';
 import {
   RecommendationCardEventPayload,
   trackIntentCardClick,
@@ -73,9 +73,9 @@ const ENV_LABEL: Record<string, string> = {
 const SCREEN_HORIZONTAL_PADDING = 22;
 const SECTION_GAP = 18;
 const CARD_GAP = 12;
-const SECTION_HORIZONTAL_PADDING = 16;
 const CARD_MIN_HEIGHT_COMPACT = 126;
 const CARD_MIN_HEIGHT_REGULAR = 142;
+const HOME_PREVIEW_CARD_LIMIT = 4;
 
 function getTimeContext(date = new Date()): TimeContext {
   const h = date.getHours();
@@ -204,7 +204,7 @@ function modeFromIntent(intent: IntentCard): RecommendationCardEventPayload['mod
 export default function HomeIntentScreen() {
   const { profile } = useUserProfile();
   const haptic = useHaptic();
-  const { width: screenWidth, fontScale } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [environment, setEnvironment] = useState<BathEnvironment>('bathtub');
   const [recentRoutines, setRecentRoutines] = useState<BathRecommendation[]>([]);
@@ -249,19 +249,34 @@ export default function HomeIntentScreen() {
   const normalizedEnvironment = normalizeEnvironmentInput(environment);
   const careCards = CARE_INTENT_CARDS;
   const tripCards = TRIP_INTENT_CARDS;
+  const previewCareCards = useMemo(
+    () => careCards.slice(0, HOME_PREVIEW_CARD_LIMIT),
+    [careCards]
+  );
+  const previewTripCards = useMemo(
+    () => tripCards.slice(0, HOME_PREVIEW_CARD_LIMIT),
+    [tripCards]
+  );
 
   const sortedSections = useMemo(() => {
-    const care = { key: 'care' as const, title: '케어 루틴', cards: careCards };
-    const trip = { key: 'trip' as const, title: '트립 루틴', cards: tripCards };
+    const care = {
+      key: 'care' as const,
+      title: '케어 루틴',
+      cards: previewCareCards,
+      route: '/(tabs)/care' as const,
+    };
+    const trip = {
+      key: 'trip' as const,
+      title: '트립 루틴',
+      cards: previewTripCards,
+      route: '/(tabs)/trip' as const,
+    };
     return sectionOrder === 'care_first' ? [care, trip] : [trip, care];
-  }, [careCards, tripCards, sectionOrder]);
+  }, [previewCareCards, previewTripCards, sectionOrder]);
 
-  const useSingleColumn = screenWidth < 380 || fontScale >= 1.15;
+  const useSingleColumn = screenWidth < 340;
   const gridColumns = useSingleColumn ? 1 : 2;
-  const sectionInnerWidth = Math.max(
-    220,
-    screenWidth - SCREEN_HORIZONTAL_PADDING * 2 - SECTION_HORIZONTAL_PADDING * 2
-  );
+  const sectionInnerWidth = Math.max(220, screenWidth - SCREEN_HORIZONTAL_PADDING * 2);
   const intentCardWidth =
     gridColumns === 2 ? (sectionInnerWidth - CARD_GAP) / 2 : sectionInnerWidth;
   const intentCardMinHeight = useSingleColumn
@@ -459,11 +474,31 @@ export default function HomeIntentScreen() {
         {/* ── Intent sections ────────────────────────────────────────── */}
         {sortedSections.map((section) => (
           <View key={section.key}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Pressable onPress={() => router.push(section.route)}>
+                <Text style={styles.moreText}>더보기</Text>
+              </Pressable>
+            </View>
 
             <View style={[styles.gridWrap, { columnGap: CARD_GAP, rowGap: CARD_GAP }]}>
               {section.cards.map((intent) => {
                 const disabled = !intent.allowed_environments.includes(normalizedEnvironment);
+                if (section.key === 'trip') {
+                  return (
+                    <TripThemeCard
+                      key={intent.id}
+                      intentId={intent.intent_id}
+                      title={intent.copy_title}
+                      subtitle={getEnvironmentSubtitle(intent, normalizedEnvironment)}
+                      disabled={disabled}
+                      disabledText="현재 환경에선 제한적으로 추천돼요"
+                      onPress={() => handleOpenSubProtocol(intent)}
+                      width={intentCardWidth}
+                      minHeight={intentCardMinHeight}
+                    />
+                  );
+                }
                 return (
                   <CategoryCard
                     key={intent.id}
@@ -599,7 +634,6 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY,
     fontWeight: '800',
     fontSize: TYPE_SCALE.title,
-    marginBottom: 12,
   },
   sectionHeaderRow: {
     flexDirection: 'row',

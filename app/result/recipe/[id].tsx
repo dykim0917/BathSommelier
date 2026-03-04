@@ -3,7 +3,6 @@ import {
   Alert,
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
@@ -11,7 +10,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+} from 'react-native-reanimated';
 import { BathRecommendation } from '@/src/engine/types';
 import { PERSONA_DEFINITIONS } from '@/src/engine/personas';
 import { getRecommendationById } from '@/src/storage/history';
@@ -19,7 +21,6 @@ import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { copy } from '@/src/content/copy';
 import { formatTemperature } from '@/src/utils/temperature';
 import { formatDuration } from '@/src/utils/time';
-import { CATEGORY_CARD_EMOJI } from '@/src/data/colors';
 import {
   APP_BG_BASE,
   BTN_PRIMARY_TEXT,
@@ -42,7 +43,7 @@ const BATH_TYPE_LABELS: Record<string, string> = {
   shower: '샤워',
 };
 
-const HERO_HEIGHT = 280;
+const HERO_HEIGHT = 116;
 
 export default function RecipeScreen() {
   const { id, source } = useLocalSearchParams<{ id: string; source?: string }>();
@@ -93,8 +94,6 @@ export default function RecipeScreen() {
       ? '트립 · 분위기 전환 루틴'
       : '케어 · 몸 상태에 맞춘 루틴';
 
-  const heroEmoji = CATEGORY_CARD_EMOJI[recommendation.intentId ?? ''] ?? '🛁';
-
   const heroGradient: [string, string] = [
     recommendation.colorHex,
     recommendation.colorHex + 'BB',
@@ -104,37 +103,40 @@ export default function RecipeScreen() {
     <View style={styles.container}>
       {/* Hero section */}
       <View style={styles.heroWrapper}>
-        <LinearGradient
-          colors={heroGradient}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={styles.hero}
-        >
-          <SafeAreaView style={styles.heroSafeArea}>
-            <View style={styles.heroNavRow}>
-              <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.back()}
-                activeOpacity={0.7}
-              >
-                <FontAwesome name="angle-left" size={22} color={TEXT_PRIMARY} />
-              </TouchableOpacity>
-              <View style={styles.modeChip}>
-                <Text style={styles.modeChipText}>{copy.routine.stepPrep}</Text>
+        <View style={styles.heroContainer}>
+          <LinearGradient
+            colors={heroGradient}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            style={styles.hero}
+          >
+            <SafeAreaView style={styles.heroSafeArea}>
+              <View style={styles.heroNavRow}>
+                <TouchableOpacity
+                  style={styles.navButton}
+                  onPress={() => router.back()}
+                  activeOpacity={0.7}
+                >
+                  <FontAwesome name="angle-left" size={22} color={TEXT_PRIMARY} />
+                </TouchableOpacity>
+                <Text style={styles.navCenterTitle} numberOfLines={1}>
+                  {recipeTitle}
+                </Text>
+                <View style={styles.modeChip}>
+                  <Text style={styles.modeChipText}>{copy.routine.stepPrep}</Text>
+                </View>
               </View>
-            </View>
-          </SafeAreaView>
+            </SafeAreaView>
 
-          <Animated.View entering={FadeIn.duration(450)} style={styles.heroContent}>
-            <Text style={styles.heroEmoji}>{heroEmoji}</Text>
-            <Text style={styles.heroTitle}>{recipeTitle}</Text>
-            <Text style={styles.heroModeLabel}>{modeLabel}</Text>
-          </Animated.View>
-        </LinearGradient>
+            <Animated.View entering={FadeIn.duration(450)} style={styles.heroContent}>
+              <Text style={styles.heroModeLabel}>{modeLabel}</Text>
+            </Animated.View>
+          </LinearGradient>
+        </View>
       </View>
 
       {/* Scrollable content */}
-      <ScrollView
+      <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -229,7 +231,7 @@ export default function RecipeScreen() {
         </View>
 
         <View style={styles.bottomSpacer} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Fixed bottom CTA */}
       <View style={styles.bottomCTA}>
@@ -260,34 +262,47 @@ const styles = StyleSheet.create({
   heroWrapper: {
     overflow: 'hidden',
   },
-  hero: {
+  heroContainer: {
     height: HERO_HEIGHT,
+  },
+  hero: {
+    flex: 1,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
   },
   heroSafeArea: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 28,
     paddingTop: 8,
   },
   heroNavRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 10,
   },
   navButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  navCenterTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: TYPE_BODY,
+    fontWeight: '700',
+    color: BTN_PRIMARY_TEXT,
+    letterSpacing: 0.2,
+    paddingHorizontal: 4,
   },
   modeChip: {
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: 'rgba(255,255,255,0.82)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
   modeChipText: {
     fontSize: TYPE_CAPTION,
@@ -296,22 +311,18 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 28,
-  },
-  heroEmoji: {
-    fontSize: 52,
-    marginBottom: 12,
+    paddingBottom: 10,
   },
   heroTitle: {
-    fontSize: TYPE_HEADING_MD,
+    fontSize: TYPE_TITLE,
     fontWeight: '800',
     color: BTN_PRIMARY_TEXT,
     textAlign: 'center',
     letterSpacing: 0.3,
-    marginBottom: 6,
+    marginBottom: 0,
     textShadowColor: 'rgba(0,0,0,0.18)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -321,7 +332,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.88)',
     textAlign: 'center',
     fontWeight: '600',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   // Scroll
   scrollView: {
@@ -469,20 +480,20 @@ const styles = StyleSheet.create({
   // Bottom CTA
   bottomCTA: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingTop: 8,
+    paddingBottom: 10,
     backgroundColor: APP_BG_BASE,
     borderTopWidth: 1,
     borderTopColor: CARD_BORDER,
   },
   startButton: {
     borderRadius: 38,
-    height: 63,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
   },
   startButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: BTN_PRIMARY_TEXT,
     letterSpacing: 0.5,

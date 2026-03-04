@@ -13,6 +13,9 @@ export const CARD_SURFACE_SOFT = 'rgba(255,255,255,0.74)';
 export const CARD_BORDER = 'rgba(150, 170, 205, 0.28)';
 export const CARD_BORDER_STRONG = 'rgba(103, 133, 184, 0.42)';
 export const CARD_SHADOW = 'rgba(39, 62, 102, 0.12)';
+export const MODAL_SURFACE = '#FFFFFF';
+export const MODAL_SUB_SURFACE = '#F7F9FC';
+export const MODAL_ACCENT_SURFACE = '#EAF1FF';
 
 // === Typography scale ===
 export const TYPE_HEADING_LG = 30;
@@ -70,6 +73,11 @@ export const CATEGORY_CARD_COLORS: Record<string, string> = {
   sleep_ready:     '#C5BEED',   // soft lavender — sleep, calm
   hangover_relief: '#F5C5A3',   // soft peach — reset, warmth
   edema_relief:    '#AECDE0',   // soft blue — circulation, water
+  // Care routines (extended)
+  cold_relief:     '#B8D9E8',   // cool mint-blue — 감기, 해열
+  menstrual_relief:'#F0C5CC',   // warm rose — 생리통, 온기
+  stress_relief:   '#C5D9B8',   // calm sage green — 스트레스, 이완
+  mood_lift:       '#F5E5A3',   // warm yellow — 기분, 활력
   // Trip routines
   kyoto_forest:    '#A8C5A0',   // muted forest green
   nordic_sauna:    '#D9C4A5',   // warm sandy beige
@@ -82,6 +90,10 @@ export const CATEGORY_CARD_EMOJI: Record<string, string> = {
   sleep_ready:     '🌙',
   hangover_relief: '✨',
   edema_relief:    '💧',
+  cold_relief:     '🤧',
+  menstrual_relief:'🌸',
+  stress_relief:   '🍃',
+  mood_lift:       '☀️',
   kyoto_forest:    '🌿',
   nordic_sauna:    '🔥',
   rainy_camping:   '🌧️',

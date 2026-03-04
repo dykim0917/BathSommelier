@@ -14,7 +14,6 @@ import { clearSession, loadSession } from '@/src/storage/session';
 import { applyFeedbackToThemePreference, saveCompletionMemory } from '@/src/storage/memory';
 import { getTimeBasedMessage } from '@/src/utils/messages';
 import { GradientBackground } from '@/src/components/GradientBackground';
-import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { copy } from '@/src/content/copy';
 import {
   BG,
@@ -230,8 +229,6 @@ export default function CompletionScreen() {
               </Animated.View>
             )}
 
-            <PersistentDisclosure style={styles.disclosureInline} />
-
             <Animated.View entering={FadeIn.duration(500).delay(1000)} style={styles.actionRow}>
               <TouchableOpacity
                 style={[styles.homeButton, styles.secondaryButton]}
@@ -405,13 +402,13 @@ const styles = StyleSheet.create({
   },
   homeButton: {
     backgroundColor: ACCENT,
-    borderRadius: 20,
-    paddingVertical: 16,
+    borderRadius: 18,
+    paddingVertical: 13,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   homeButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#fff',
   },

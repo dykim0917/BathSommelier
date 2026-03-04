@@ -59,55 +59,7 @@ const ENV_OPTIONS: { id: BathEnvironment; emoji: string; label: string }[] = [
   { id: 'shower', emoji: '🚿', label: '샤워' },
 ];
 
-// P0: 미구현 4종 placeholder 카드 (allowed_environments 비워서 항상 disabled)
-const CARE_PLACEHOLDER_CARDS: IntentCard[] = [
-  {
-    id: 'care_cold_relief',
-    domain: 'care',
-    intent_id: 'cold_relief',
-    mapped_mode: 'recovery',
-    allowed_environments: [],
-    copy_title: '감기 기운이 느껴질 때',
-    copy_subtitle_by_environment: { bathtub: '준비 중이에요', shower: '준비 중이에요', partial_bath: '준비 중이에요' },
-    default_subprotocol_id: '',
-    card_position: 5,
-  },
-  {
-    id: 'care_menstrual_relief',
-    domain: 'care',
-    intent_id: 'menstrual_relief',
-    mapped_mode: 'recovery',
-    allowed_environments: [],
-    copy_title: '생리통이 있을 때',
-    copy_subtitle_by_environment: { bathtub: '준비 중이에요', shower: '준비 중이에요', partial_bath: '준비 중이에요' },
-    default_subprotocol_id: '',
-    card_position: 6,
-  },
-  {
-    id: 'care_stress_relief',
-    domain: 'care',
-    intent_id: 'stress_relief',
-    mapped_mode: 'recovery',
-    allowed_environments: [],
-    copy_title: '스트레스를 풀고 싶을 때',
-    copy_subtitle_by_environment: { bathtub: '준비 중이에요', shower: '준비 중이에요', partial_bath: '준비 중이에요' },
-    default_subprotocol_id: '',
-    card_position: 7,
-  },
-  {
-    id: 'care_mood_lift',
-    domain: 'care',
-    intent_id: 'mood_lift',
-    mapped_mode: 'recovery',
-    allowed_environments: [],
-    copy_title: '기분 전환이 필요할 때',
-    copy_subtitle_by_environment: { bathtub: '준비 중이에요', shower: '준비 중이에요', partial_bath: '준비 중이에요' },
-    default_subprotocol_id: '',
-    card_position: 8,
-  },
-];
-
-const ALL_CARE_CARDS = [...CARE_INTENT_CARDS, ...CARE_PLACEHOLDER_CARDS];
+const ALL_CARE_CARDS = CARE_INTENT_CARDS;
 
 const SCREEN_HORIZONTAL_PADDING = 22;
 const SECTION_GAP = 18;
@@ -152,6 +104,10 @@ function mapIntentToTags(intentId: string): DailyTag[] {
     case 'sleep_ready': return ['insomnia'];
     case 'hangover_relief': return ['hangover'];
     case 'edema_relief': return ['swelling'];
+    case 'cold_relief': return ['cold'];
+    case 'menstrual_relief': return ['menstrual_pain'];
+    case 'stress_relief': return ['stress'];
+    case 'mood_lift': return ['depression'];
     default: return ['stress'];
   }
 }
@@ -181,7 +137,7 @@ function resolveFallback(intent: IntentCard, healthConditions: UserProfile['heal
 export default function CareScreen() {
   const { profile } = useUserProfile();
   const haptic = useHaptic();
-  const { width: screenWidth, fontScale } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [environment, setEnvironment] = useState<BathEnvironment>('bathtub');
   const [warningVisible, setWarningVisible] = useState(false);
@@ -209,10 +165,7 @@ export default function CareScreen() {
 
   const normalizedEnvironment = normalizeEnvironmentInput(environment);
 
-  const useSingleColumn = screenWidth < 380 || fontScale >= 1.15;
-  const gridColumns = useSingleColumn ? 1 : 2;
-  const sectionInnerWidth = Math.max(220, screenWidth - SCREEN_HORIZONTAL_PADDING * 2 - 32);
-  const intentCardWidth = gridColumns === 2 ? (sectionInnerWidth - CARD_GAP) / 2 : sectionInnerWidth;
+  const intentCardWidth = Math.max(220, screenWidth - SCREEN_HORIZONTAL_PADDING * 2);
 
   useEffect(() => {
     const appVersion = Constants.expoConfig?.version ?? 'unknown';
@@ -381,7 +334,7 @@ export default function CareScreen() {
 
         <View>
           <Text style={styles.sectionTitle}>케어 루틴</Text>
-          <View style={[styles.gridWrap, { columnGap: CARD_GAP, rowGap: CARD_GAP }]}>
+          <View style={[styles.gridWrap, { rowGap: CARD_GAP }]}>
             {ALL_CARE_CARDS.map((intent) => {
               const isPlaceholder = intent.allowed_environments.length === 0;
               const disabled = isPlaceholder || !intent.allowed_environments.includes(normalizedEnvironment);

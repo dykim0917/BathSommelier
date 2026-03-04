@@ -83,19 +83,25 @@ export default function OnboardingHealth() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Back arrow */}
-      <TouchableOpacity
-        style={styles.backButton}
-        activeOpacity={0.7}
-        onPress={() => router.back()}
-      >
-        <FontAwesome name="angle-left" size={28} color={TEXT_PRIMARY} />
-      </TouchableOpacity>
-
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>건강 상태를{'\n'}선택해주세요</Text>
-          <Text style={styles.subtitle}>안전한 입욕법을 위해 해당 사항을 모두 선택해주세요</Text>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+                return;
+              }
+              router.replace('/onboarding');
+            }}
+          >
+            <FontAwesome name="angle-left" size={28} color={TEXT_PRIMARY} />
+          </TouchableOpacity>
+          <View style={styles.header}>
+            <Text style={styles.title}>건강 상태를{'\n'}선택해주세요</Text>
+            <Text style={styles.subtitle}>안전한 입욕법을 위해 해당 사항을 모두 선택해주세요</Text>
+          </View>
         </View>
 
         <View style={styles.conditions}>
@@ -134,22 +140,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: APP_BG_BASE,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 24,
+  },
   backButton: {
-    marginLeft: 20,
-    marginTop: 10,
     width: 44,
     height: 44,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 2,
   },
   container: {
     flex: 1,
     paddingHorizontal: 24,
   },
   header: {
-    marginTop: 16,
-    marginBottom: 32,
+    flex: 1,
   },
   title: {
     fontSize: TYPE_HEADING_LG,
@@ -182,10 +193,10 @@ const styles = StyleSheet.create({
   completeButton: {
     backgroundColor: BTN_PRIMARY,
     borderRadius: 38,
-    height: 63,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   completeButtonDisabled: {
     backgroundColor: BTN_DISABLED,

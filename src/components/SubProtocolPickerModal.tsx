@@ -3,11 +3,11 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SubProtocolOption } from '@/src/engine/types';
 import {
   ACCENT,
-  ACCENT_LIGHT,
   BTN_PRIMARY,
   BTN_PRIMARY_TEXT,
   CARD_BORDER,
-  CARD_SURFACE,
+  MODAL_ACCENT_SURFACE,
+  MODAL_SURFACE,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
   TYPE_SCALE,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(17,29,48,0.3)',
   },
   card: {
-    backgroundColor: CARD_SURFACE,
+    backgroundColor: MODAL_SURFACE,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderWidth: 1,
@@ -107,12 +107,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     minHeight: 72,
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: MODAL_SURFACE,
     gap: 6,
   },
   optionButtonDefault: {
     borderColor: ACCENT,
-    backgroundColor: ACCENT_LIGHT,
+    backgroundColor: MODAL_ACCENT_SURFACE,
   },
   optionLabelRow: {
     flexDirection: 'row' as const,
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     fontSize: TYPE_SCALE.caption - 1,
     fontWeight: '700' as const,
     color: ACCENT,
-    backgroundColor: 'rgba(120,149,207,0.14)',
+    backgroundColor: '#E6EFFF',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,

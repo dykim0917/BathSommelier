@@ -371,13 +371,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // CTA button: left:20 top:705 width:374 height:63 radius:38
+  // CTA button: compact height
   signUpButton: {
     position: 'absolute',
-    top: sy(705),
+    top: sy(708),
     left: sx(20),
     right: sx(20),
-    height: sy(63),
+    height: sy(56),
     backgroundColor: BTN_PRIMARY,
     borderRadius: sy(38),
     justifyContent: 'center',

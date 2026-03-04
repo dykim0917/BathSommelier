@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Modal,
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,7 +23,6 @@ import { THEME_BY_ID } from '@/src/data/themes';
 import { copy } from '@/src/content/copy';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useHaptic } from '@/src/hooks/useHaptic';
-import { clearProfile } from '@/src/storage/profile';
 import { PersistentDisclosure } from '@/src/components/PersistentDisclosure';
 import { CATEGORY_CARD_EMOJI } from '@/src/data/colors';
 import {
@@ -34,6 +34,7 @@ import {
   CARD_BORDER,
   CARD_SHADOW,
   CARD_SURFACE,
+  MODAL_SURFACE,
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
@@ -273,8 +274,16 @@ function HistorySection() {
 // ─── Settings Section ──────────────────────────────────────────────────────────
 
 function SettingsSection() {
-  const { profile, loading, update } = useUserProfile();
+  const { profile, loading, update, clear } = useUserProfile();
   const haptic = useHaptic();
+  const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.replace('/onboarding');
+    }
+  }, [loading, profile]);
 
   const handleEnvironmentChange = async (environment: BathEnvironment) => {
     if (!profile) return;
@@ -304,23 +313,24 @@ function SettingsSection() {
     await update({ healthConditions: Array.from(next) });
   };
 
+  const runReset = async () => {
+    if (isResetting) return;
+    try {
+      setIsResetting(true);
+      haptic.warning();
+      await clear();
+      setResetModalVisible(false);
+      router.replace('/onboarding');
+    } catch {
+      Alert.alert('오류', '프로필 초기화 중 문제가 발생했어요. 다시 시도해주세요.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const handleResetOnboarding = () => {
-    Alert.alert(
-      copy.settings.resetDialogTitle,
-      copy.settings.resetDialogBody,
-      [
-        { text: copy.settings.resetCancel, style: 'cancel' },
-        {
-          text: copy.settings.resetConfirm,
-          style: 'destructive',
-          onPress: async () => {
-            haptic.warning();
-            await clearProfile();
-            router.replace('/onboarding');
-          },
-        },
-      ]
-    );
+    haptic.light();
+    setResetModalVisible(true);
   };
 
   if (loading || !profile) {
@@ -341,7 +351,7 @@ function SettingsSection() {
             <Text style={styles.infoLabel}>{copy.settings.environmentLabel}</Text>
             <Text style={styles.infoValue}>{ENV_LABELS_SETTINGS[profile.bathEnvironment]}</Text>
           </View>
-          <View style={styles.conditionsList}>
+          <View style={styles.environmentList}>
             {(Object.keys(ENV_LABELS_SETTINGS) as BathEnvironment[]).map((env) => (
               <TouchableOpacity
                 key={env}
@@ -402,6 +412,40 @@ function SettingsSection() {
           <PersistentDisclosure style={styles.disclosureInline} showColdWarning />
         </View>
       </ScrollView>
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={resetModalVisible}
+        onRequestClose={() => setResetModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{copy.settings.resetDialogTitle}</Text>
+            <Text style={styles.modalBody}>{copy.settings.resetDialogBody}</Text>
+            <View style={styles.modalActions}>
+              <Pressable
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => setResetModalVisible(false)}
+                disabled={isResetting}
+              >
+                <Text style={styles.modalCancelText}>{copy.settings.resetCancel}</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.modalConfirmButton, isResetting && styles.modalButtonDisabled]}
+                onPress={() => {
+                  void runReset();
+                }}
+                disabled={isResetting}
+              >
+                <Text style={styles.modalConfirmText}>
+                  {isResetting ? '초기화 중...' : copy.settings.resetConfirm}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -627,7 +671,7 @@ const styles = StyleSheet.create({
   // Settings section
   settingsContainer: { flex: 1 },
   settingsCentered: { justifyContent: 'center', alignItems: 'center' },
-  settingsContent: { padding: 18, paddingBottom: 28 },
+  settingsContent: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 28 },
   settingsSection: { marginBottom: 20 },
   settingsSectionTitle: {
     fontSize: TYPE_TITLE,
@@ -667,14 +711,20 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: TYPE_BODY,
     color: TEXT_SECONDARY,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   infoValue: {
     fontSize: TYPE_BODY,
     fontWeight: '600',
     color: TEXT_PRIMARY,
   },
-  conditionsList: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  environmentList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 6,
+  },
+  conditionsList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   conditionTagButton: {
     borderRadius: 999,
     borderWidth: 1,
@@ -706,4 +756,64 @@ const styles = StyleSheet.create({
   actionText: { fontSize: TYPE_BODY, color: TEXT_PRIMARY, fontWeight: '600' },
   actionArrow: { fontSize: 18, color: ACCENT },
   disclosureInline: { marginTop: 8 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(12, 20, 32, 0.38)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: MODAL_SURFACE,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    padding: 18,
+  },
+  modalTitle: {
+    fontSize: TYPE_TITLE,
+    fontWeight: '800',
+    color: TEXT_PRIMARY,
+    marginBottom: 8,
+  },
+  modalBody: {
+    fontSize: TYPE_BODY,
+    color: TEXT_SECONDARY,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalButton: {
+    borderRadius: 999,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+  },
+  modalCancelButton: {
+    borderColor: CARD_BORDER,
+    backgroundColor: '#FFFFFF',
+  },
+  modalConfirmButton: {
+    borderColor: ACCENT,
+    backgroundColor: ACCENT,
+  },
+  modalCancelText: {
+    color: TEXT_SECONDARY,
+    fontWeight: '700',
+    fontSize: TYPE_CAPTION,
+  },
+  modalConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: TYPE_CAPTION,
+  },
+  modalButtonDisabled: {
+    opacity: 0.72,
+  },
 });

@@ -1,13 +1,13 @@
 import React from 'react';
 import {
   Modal,
-  View,
-  Text,
   Pressable,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import { OVERLAY, GLASS_BORDER, GLASS_SHADOW, TEXT_PRIMARY, WARNING_COLOR } from '@/src/data/colors';
+import { GLASS_SHADOW, MODAL_SURFACE, TEXT_PRIMARY, WARNING_COLOR } from '@/src/data/colors';
 
 interface SafetyWarningProps {
   visible: boolean;
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   card: {
-    backgroundColor: OVERLAY,
+    backgroundColor: MODAL_SURFACE,
     borderRadius: 20,
     borderWidth: 2,
     borderColor: WARNING_COLOR,
