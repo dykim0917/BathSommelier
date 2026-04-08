@@ -1,0 +1,141 @@
+{
+  "baseUrl": "http://localhost:8082",
+  "generatedAt": "2026-04-08T05:10:29.085Z",
+  "shots": [
+    {
+      "file": "onboarding-welcome.png",
+      "description": "Welcome landing",
+      "url": "http://localhost:8082/onboarding/welcome"
+    },
+    {
+      "file": "onboarding-environment.png",
+      "description": "Onboarding environment selection",
+      "url": "http://localhost:8082/onboarding"
+    },
+    {
+      "file": "onboarding-environment-selected.png",
+      "description": "Onboarding environment selected",
+      "url": "http://localhost:8082/onboarding"
+    },
+    {
+      "file": "onboarding-health.png",
+      "description": "Onboarding health selection",
+      "url": "http://localhost:8082/onboarding/health?environment=bathtub"
+    },
+    {
+      "file": "onboarding-health-selected.png",
+      "description": "Onboarding health selected",
+      "url": "http://localhost:8082/onboarding/health?environment=bathtub"
+    },
+    {
+      "file": "onboarding-greeting.png",
+      "description": "Onboarding greeting",
+      "url": "http://localhost:8082/onboarding/greeting"
+    },
+    {
+      "file": "my-history-empty.png",
+      "description": "My tab history empty state",
+      "url": "http://localhost:8082/my"
+    },
+    {
+      "file": "home-empty.png",
+      "description": "Home tab with empty recent history",
+      "url": "http://localhost:8082/"
+    },
+    {
+      "file": "care-default.png",
+      "description": "Care tab default state",
+      "url": "http://localhost:8082/care"
+    },
+    {
+      "file": "care-subprotocol-modal.png",
+      "description": "Care subprotocol modal",
+      "url": "http://localhost:8082/care"
+    },
+    {
+      "file": "recipe-care.png",
+      "description": "Care recipe screen",
+      "url": "http://localhost:8082/result/recipe/rec_1775625010603_wxk12m?source=care"
+    },
+    {
+      "file": "recipe-product-matching-modal.png",
+      "description": "Recipe product matching modal",
+      "url": "http://localhost:8082/result/recipe/rec_1775625010603_wxk12m?source=care"
+    },
+    {
+      "file": "recipe-product-detail-modal.png",
+      "description": "Recipe product detail modal",
+      "url": "http://localhost:8082/result/recipe/rec_1775625010603_wxk12m?source=care"
+    },
+    {
+      "file": "timer-running.png",
+      "description": "Timer screen running state",
+      "url": "http://localhost:8082/result/timer/rec_1775625010603_wxk12m"
+    },
+    {
+      "file": "timer-paused.png",
+      "description": "Timer screen paused state",
+      "url": "http://localhost:8082/result/timer/rec_1775625010603_wxk12m"
+    },
+    {
+      "file": "completion-default.png",
+      "description": "Completion screen before feedback",
+      "url": "http://localhost:8082/result/completion/rec_1775625010603_wxk12m"
+    },
+    {
+      "file": "completion-feedback-good.png",
+      "description": "Completion screen after positive feedback",
+      "url": "http://localhost:8082/result/completion/rec_1775625010603_wxk12m"
+    },
+    {
+      "file": "home-with-history.png",
+      "description": "Home tab with recent history",
+      "url": "http://localhost:8082/"
+    },
+    {
+      "file": "trip-default.png",
+      "description": "Trip tab default state",
+      "url": "http://localhost:8082/trip"
+    },
+    {
+      "file": "trip-subprotocol-modal.png",
+      "description": "Trip subprotocol modal",
+      "url": "http://localhost:8082/trip"
+    },
+    {
+      "file": "product-default.png",
+      "description": "Product tab default state",
+      "url": "http://localhost:8082/product"
+    },
+    {
+      "file": "product-detail-modal.png",
+      "description": "Product tab detail modal",
+      "url": "http://localhost:8082/product"
+    },
+    {
+      "file": "my-history-filled.png",
+      "description": "My tab history filled state",
+      "url": "http://localhost:8082/my"
+    },
+    {
+      "file": "my-settings.png",
+      "description": "My tab settings state",
+      "url": "http://localhost:8082/my"
+    },
+    {
+      "file": "my-settings-reset-modal.png",
+      "description": "My tab reset confirmation modal",
+      "url": "http://localhost:8082/my"
+    },
+    {
+      "file": "care-safety-warning.png",
+      "description": "Care flow safety warning modal",
+      "url": "http://localhost:8082/care"
+    },
+    {
+      "file": "trip-safety-warning.png",
+      "description": "Trip flow safety warning modal",
+      "url": "http://localhost:8082/trip"
+    }
+  ]
+}
