@@ -1,10 +1,15 @@
 {
   "baseUrl": "http://localhost:8082",
-  "generatedAt": "2026-04-08T05:10:29.085Z",
+  "generatedAt": "2026-04-23T10:51:53.058Z",
   "shots": [
     {
       "file": "onboarding-welcome.png",
-      "description": "Welcome landing",
+      "description": "Welcome onboarding step 1",
+      "url": "http://localhost:8082/onboarding/welcome"
+    },
+    {
+      "file": "onboarding-legal.png",
+      "description": "Welcome onboarding legal notice step",
       "url": "http://localhost:8082/onboarding/welcome"
     },
     {
@@ -33,13 +38,38 @@
       "url": "http://localhost:8082/onboarding/greeting"
     },
     {
+      "file": "cookie-banner.png",
+      "description": "Cookie banner over app shell",
+      "url": "http://localhost:8082/care"
+    },
+    {
+      "file": "legal-privacy.png",
+      "description": "Privacy policy screen",
+      "url": "http://localhost:8082/legal/privacy"
+    },
+    {
+      "file": "legal-terms.png",
+      "description": "Terms of service screen",
+      "url": "http://localhost:8082/legal/terms"
+    },
+    {
       "file": "my-history-empty.png",
       "description": "My tab history empty state",
       "url": "http://localhost:8082/my"
     },
     {
+      "file": "trip-default.png",
+      "description": "Trip tab default state",
+      "url": "http://localhost:8082/trip"
+    },
+    {
+      "file": "recipe-prebath-gate.png",
+      "description": "Pre-bath safety gate modal",
+      "url": "http://localhost:8082/result/recipe/rec_1776941466668_8yqxpx?source=trip"
+    },
+    {
       "file": "home-empty.png",
-      "description": "Home tab with empty recent history",
+      "description": "Home tab with empty history",
       "url": "http://localhost:8082/"
     },
     {
@@ -55,52 +85,52 @@
     {
       "file": "recipe-care.png",
       "description": "Care recipe screen",
-      "url": "http://localhost:8082/result/recipe/rec_1775625010603_wxk12m?source=care"
+      "url": "http://localhost:8082/result/recipe/rec_1776941478564_s6tyrg?source=care"
     },
     {
       "file": "recipe-product-matching-modal.png",
       "description": "Recipe product matching modal",
-      "url": "http://localhost:8082/result/recipe/rec_1775625010603_wxk12m?source=care"
+      "url": "http://localhost:8082/result/recipe/rec_1776941478564_s6tyrg?source=care"
     },
     {
       "file": "recipe-product-detail-modal.png",
       "description": "Recipe product detail modal",
-      "url": "http://localhost:8082/result/recipe/rec_1775625010603_wxk12m?source=care"
+      "url": "http://localhost:8082/result/recipe/rec_1776941478564_s6tyrg?source=care"
+    },
+    {
+      "file": "timer-intro.png",
+      "description": "Timer intro state",
+      "url": "http://localhost:8082/result/timer/rec_1776941478564_s6tyrg"
     },
     {
       "file": "timer-running.png",
-      "description": "Timer screen running state",
-      "url": "http://localhost:8082/result/timer/rec_1775625010603_wxk12m"
+      "description": "Timer running state",
+      "url": "http://localhost:8082/result/timer/rec_1776941478564_s6tyrg"
     },
     {
       "file": "timer-paused.png",
-      "description": "Timer screen paused state",
-      "url": "http://localhost:8082/result/timer/rec_1775625010603_wxk12m"
+      "description": "Timer paused state",
+      "url": "http://localhost:8082/result/timer/rec_1776941478564_s6tyrg"
+    },
+    {
+      "file": "timer-sound-modal.png",
+      "description": "Timer sound control modal",
+      "url": "http://localhost:8082/result/timer/rec_1776941478564_s6tyrg"
     },
     {
       "file": "completion-default.png",
-      "description": "Completion screen before feedback",
-      "url": "http://localhost:8082/result/completion/rec_1775625010603_wxk12m"
+      "description": "Completion feedback step",
+      "url": "http://localhost:8082/result/completion/rec_1776941478564_s6tyrg"
     },
     {
-      "file": "completion-feedback-good.png",
-      "description": "Completion screen after positive feedback",
-      "url": "http://localhost:8082/result/completion/rec_1775625010603_wxk12m"
+      "file": "completion-summary.png",
+      "description": "Completion summary step",
+      "url": "http://localhost:8082/result/completion/rec_1776941478564_s6tyrg"
     },
     {
       "file": "home-with-history.png",
       "description": "Home tab with recent history",
       "url": "http://localhost:8082/"
-    },
-    {
-      "file": "trip-default.png",
-      "description": "Trip tab default state",
-      "url": "http://localhost:8082/trip"
-    },
-    {
-      "file": "trip-subprotocol-modal.png",
-      "description": "Trip subprotocol modal",
-      "url": "http://localhost:8082/trip"
     },
     {
       "file": "product-default.png",
@@ -109,7 +139,7 @@
     },
     {
       "file": "product-detail-modal.png",
-      "description": "Product tab detail modal",
+      "description": "Product detail modal",
       "url": "http://localhost:8082/product"
     },
     {
@@ -119,23 +149,13 @@
     },
     {
       "file": "my-settings.png",
-      "description": "My tab settings state",
+      "description": "My tab settings top state",
       "url": "http://localhost:8082/my"
     },
     {
-      "file": "my-settings-reset-modal.png",
-      "description": "My tab reset confirmation modal",
+      "file": "my-settings-legal.png",
+      "description": "My tab settings legal section",
       "url": "http://localhost:8082/my"
-    },
-    {
-      "file": "care-safety-warning.png",
-      "description": "Care flow safety warning modal",
-      "url": "http://localhost:8082/care"
-    },
-    {
-      "file": "trip-safety-warning.png",
-      "description": "Trip flow safety warning modal",
-      "url": "http://localhost:8082/trip"
     }
   ]
 }
