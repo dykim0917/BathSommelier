@@ -53,6 +53,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="admin/index" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="legal/privacy" options={{ title: '개인정보 처리방침', headerShown: true }} />
           <Stack.Screen name="legal/terms" options={{ title: '이용약관', headerShown: true }} />
